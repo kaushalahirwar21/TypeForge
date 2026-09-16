@@ -24,8 +24,11 @@ urlpatterns = [
     path('statistics/', views.statistics_view, name='statistics'),
     path('profile/', views.profile_view, name='profile'),
     path('settings/', views.settings_view, name='settings'),
+    path('practice/', views.practice_view, name='practice'),
 
     # Real-Time API Endpoints
     path('api/lesson/submit/', views.api_submit_lesson, name='api_submit_lesson'),
     path('api/test/submit/', views.api_submit_test, name='api_submit_test'),
+    path('api/drill/generate/', views.api_generate_weak_drill, name='api_generate_weak_drill'),
 ]
+

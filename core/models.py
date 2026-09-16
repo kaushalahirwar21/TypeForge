@@ -104,7 +104,24 @@ class Course(models.Model):
 
 
 class Lesson(models.Model):
+    STAGES = [
+        ('foundation', 'Foundation & Posture'),
+        ('home_row', 'Home Row'),
+        ('top_row', 'Top Row'),
+        ('bottom_row', 'Bottom Row'),
+        ('full_alphabet', 'Full Alphabet'),
+        ('capital_letters', 'Capital Letters & Shift'),
+        ('numbers', 'Numbers Row'),
+        ('symbols', 'Symbols & Punctuation'),
+        ('common_words', 'High Frequency Words'),
+        ('sentences', 'Sentences & Flow'),
+        ('paragraphs', 'Paragraphs & Literature'),
+        ('speed_training', 'Speed Training'),
+        ('accuracy_training', 'Accuracy Training'),
+    ]
+
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
+    stage = models.CharField(max_length=30, choices=STAGES, default='home_row', db_index=True)
     level_number = models.PositiveIntegerField(default=1, db_index=True)
     level_title = models.CharField(max_length=100, default='Level 1')
     lesson_number = models.PositiveIntegerField(db_index=True)
@@ -114,12 +131,21 @@ class Lesson(models.Model):
     instruction = models.TextField(help_text="Instructions shown to the user before or during typing")
     target_text = models.TextField(help_text="The exact text the user must type")
     keys_introduced = models.CharField(max_length=100, blank=True, help_text="e.g. 'f, j'")
-    
-    # Thresholds for stars
+
+    # Pre-typing Teacher Module Details
+    key_name = models.CharField(max_length=100, default='Home Row Keys')
+    target_finger = models.CharField(max_length=100, default='Index Fingers')
+    finger_hand = models.CharField(max_length=100, default='Left & Right Hands')
+    finger_why = models.TextField(default="Anchor your hands on the home row using the small physical ridges on F and J.")
+    skill_learned = models.CharField(max_length=255, default="Practiced correct finger placement and muscle memory.")
+    spaced_repetition_keys = models.CharField(max_length=150, blank=True, help_text="Previously learned keys reinforced")
+
+    # Thresholds for stars & mastery
     min_wpm_3stars = models.PositiveIntegerField(default=15)
     min_wpm_4stars = models.PositiveIntegerField(default=25)
     min_wpm_5stars = models.PositiveIntegerField(default=35)
-    min_accuracy_threshold = models.FloatField(default=85.0, help_text="Minimum accuracy % to pass (1 star)")
+    min_accuracy_threshold = models.FloatField(default=85.0, help_text="Minimum accuracy % to complete (unlock next)")
+    min_mastery_accuracy = models.FloatField(default=90.0, help_text="Minimum accuracy % for mastery badge")
 
     class Meta:
         ordering = ['level_number', 'lesson_number']
@@ -130,7 +156,7 @@ class Lesson(models.Model):
 
     def calculate_stars(self, wpm, accuracy):
         if accuracy < self.min_accuracy_threshold:
-            return 0  # Failed / Needs retry
+            return 0  # Needs Practice (below 85%)
         if accuracy >= 98 and wpm >= self.min_wpm_5stars:
             return 5
         elif accuracy >= 95 and wpm >= self.min_wpm_4stars:
@@ -142,11 +168,17 @@ class Lesson(models.Model):
         else:
             return 1
 
+    def is_performance_mastered(self, wpm, accuracy, mistakes_count):
+        # Mastery requires >= 90% accuracy and controlled mistakes
+        return accuracy >= self.min_mastery_accuracy and mistakes_count <= 4
+
 
 class LessonProgress(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lesson_progress')
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='user_progress')
     completed = models.BooleanField(default=False)
+    is_mastered = models.BooleanField(default=False)
+    mastery_count = models.PositiveIntegerField(default=0)
     unlocked = models.BooleanField(default=False)
     stars = models.PositiveSmallIntegerField(default=0)  # 0 to 5
     best_wpm = models.FloatField(default=0.0)
@@ -159,11 +191,13 @@ class LessonProgress(models.Model):
         unique_together = ('user', 'lesson')
         indexes = [
             models.Index(fields=['user', 'completed']),
+            models.Index(fields=['user', 'is_mastered']),
             models.Index(fields=['user', 'lesson']),
         ]
 
     def __str__(self):
-        return f"{self.user.username} - {self.lesson.title}: {self.stars}★ ({'Done' if self.completed else 'In Progress'})"
+        status = "Mastered" if self.is_mastered else ("Completed" if self.completed else "In Progress")
+        return f"{self.user.username} - {self.lesson.title}: {self.stars}★ ({status})"
 
 
 class TypingSession(models.Model):

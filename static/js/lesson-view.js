@@ -31,19 +31,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const keyboardSection = document.getElementById('virtual-keyboard');
   const handGuideSection = document.getElementById('hand-guide');
 
-  // Modal Elements
+  // Modal & Guide Elements
+  const keyIntroModal = document.getElementById('key-intro-modal');
+  const btnStartGuidedPractice = document.getElementById('btn-start-guided-practice');
+  const btnShowGuide = document.getElementById('btn-show-guide');
+  const foundationModal = document.getElementById('foundation-modal');
+  const btnPostureGuide = document.getElementById('btn-posture-guide');
+  const btnCloseFoundation = document.getElementById('btn-close-foundation');
+
+  // Real-Time Finger Discipline Warning
+  const fingerWarningCallout = document.getElementById('finger-warning-callout');
+  const fingerWarningText = document.getElementById('finger-warning-text');
+  let warningTimer = null;
+
+  // Completion Modal Elements
   const modalBackdrop = document.getElementById('result-modal-backdrop');
+  const modalStatusPill = document.getElementById('modal-status-pill');
   const modalTitle = document.getElementById('modal-title');
   const modalSubtitle = document.getElementById('modal-subtitle');
   const modalWpm = document.getElementById('modal-wpm');
   const modalAcc = document.getElementById('modal-acc');
   const modalErr = document.getElementById('modal-err');
   const modalTime = document.getElementById('modal-time');
+  const modalFeedbackText = document.getElementById('modal-feedback-text');
+  const modalMissedKeysContainer = document.getElementById('modal-missed-keys-container');
+  const modalMissedKeysList = document.getElementById('modal-missed-keys-list');
+  const modalRecText = document.getElementById('modal-recommendation-text');
+  const modalSkillLearned = document.getElementById('modal-skill-learned');
   const modalXpBanner = document.getElementById('modal-xp-banner');
   const modalXpText = document.getElementById('modal-xp-text');
   const starsContainer = document.getElementById('modal-stars-container');
   const nextLessonBtn = document.getElementById('modal-btn-next');
   const retryBtn = document.getElementById('modal-btn-retry');
+  const modalBtnDrill = document.getElementById('modal-btn-drill');
 
   // Initialize Virtual Keyboard & Finger Guide
   const keyboard = new TypeForgeKeyboard('virtual-keyboard', 'hand-guide');
@@ -101,6 +121,18 @@ document.addEventListener('DOMContentLoaded', () => {
       timeDisplay.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
       progressBar.style.width = `${stats.progressPercent}%`;
     },
+    onFingerWarning: (expectedChar, mistakeCount) => {
+      if (!fingerWarningCallout || !fingerWarningText) return;
+      const mapping = keyboard.getMapping(expectedChar);
+      const fingerName = mapping ? mapping.name : 'proper finger';
+      const keyDisplay = expectedChar === ' ' ? 'SPACE' : expectedChar.toUpperCase();
+      fingerWarningText.textContent = `Finger Warning: Use your ${fingerName} for "${keyDisplay}"! (${mistakeCount} misses)`;
+      fingerWarningCallout.classList.add('show');
+      if (warningTimer) clearTimeout(warningTimer);
+      warningTimer = setTimeout(() => {
+        fingerWarningCallout.classList.remove('show');
+      }, 3500);
+    },
     onComplete: (finalStats) => {
       handleLessonComplete(finalStats);
     }
@@ -119,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleLessonComplete(stats) {
     const stars = calculateStars(stats.wpm, stats.accuracy);
 
-    // Populate Modal
+    // Populate Modal Stats
     modalWpm.textContent = stats.wpm;
     modalAcc.textContent = `${stats.accuracy}%`;
     modalErr.textContent = stats.mistakesCount;
@@ -134,14 +166,30 @@ document.addEventListener('DOMContentLoaded', () => {
       starsContainer.appendChild(star);
     }
 
-    if (stars >= 1) {
-      modalTitle.textContent = stars >= 4 ? "Outstanding Typing!" : "Lesson Complete!";
-      modalSubtitle.textContent = "You've successfully mastered this key progression.";
-      if (nextLessonBtn) nextLessonBtn.style.display = 'inline-flex';
+    // Provisional display while awaiting server confirmation
+    if (stats.accuracy >= 90) {
+      if (modalStatusPill) {
+        modalStatusPill.className = 'mastery-pill status-mastered';
+        modalStatusPill.innerHTML = 'Mastered 🏅';
+      }
+      modalTitle.textContent = "Lesson Mastered!";
+      modalSubtitle.textContent = "Outstanding accuracy and clean touch-typing habits.";
+      if (window.typeforgeSound) window.typeforgeSound.playSuccess();
+    } else if (stats.accuracy >= minAcc) {
+      if (modalStatusPill) {
+        modalStatusPill.className = 'mastery-pill status-completed';
+        modalStatusPill.innerHTML = 'Completed ✓';
+      }
+      modalTitle.textContent = "Lesson Completed";
+      modalSubtitle.textContent = "Good progress! Reach 90%+ Accuracy to unlock Mastered status.";
+      if (window.typeforgeSound) window.typeforgeSound.playSuccess();
     } else {
-      modalTitle.textContent = "Almost There!";
-      modalSubtitle.textContent = `Target accuracy is ${minAcc}%. Keep practicing for high precision!`;
-      if (nextLessonBtn) nextLessonBtn.style.display = 'none';
+      if (modalStatusPill) {
+        modalStatusPill.className = 'mastery-pill status-needs-practice';
+        modalStatusPill.innerHTML = 'Practice Needed ⚠️';
+      }
+      modalTitle.textContent = "Practice Recommended";
+      modalSubtitle.textContent = `Target accuracy is ${minAcc}%. Precision must come before speed.`;
     }
 
     // Submit results to server via AJAX
@@ -165,13 +213,73 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        if (data.xp_earned > 0) {
+        // Update Title & Subtitle from server
+        if (data.title) modalTitle.textContent = data.title;
+        if (data.feedback_msg) {
+          modalSubtitle.textContent = data.feedback_msg;
+          if (modalFeedbackText) modalFeedbackText.textContent = data.feedback_msg;
+        }
+
+        // Update Status Pill
+        if (modalStatusPill && data.status) {
+          modalStatusPill.className = 'mastery-pill';
+          if (data.status === 'MASTERED') {
+            modalStatusPill.classList.add('status-mastered');
+            modalStatusPill.innerHTML = 'Mastered 🏅';
+          } else if (data.status === 'COMPLETED') {
+            modalStatusPill.classList.add('status-completed');
+            modalStatusPill.innerHTML = 'Completed ✓';
+          } else {
+            modalStatusPill.classList.add('status-needs-practice');
+            modalStatusPill.innerHTML = 'Practice Needed ⚠️';
+          }
+        }
+
+        // Most Missed Keys & Drill Routing
+        if (data.most_missed_keys && data.most_missed_keys.length > 0) {
+          if (modalMissedKeysContainer && modalMissedKeysList) {
+            modalMissedKeysContainer.style.display = 'block';
+            modalMissedKeysList.innerHTML = '';
+            data.most_missed_keys.forEach(item => {
+              const tag = document.createElement('span');
+              tag.className = 'missed-key-tag';
+              tag.textContent = `${item.key} (${item.count} misses)`;
+              modalMissedKeysList.appendChild(tag);
+            });
+          }
+          if (modalBtnDrill) {
+            const weakKeysParam = data.most_missed_keys.map(item => item.key.toLowerCase()).join(',');
+            modalBtnDrill.href = `/practice/?keys=${encodeURIComponent(weakKeysParam)}`;
+          }
+        } else {
+          if (modalMissedKeysContainer) modalMissedKeysContainer.style.display = 'none';
+          if (modalBtnDrill) modalBtnDrill.href = '/practice/';
+        }
+
+        // Recommendation Text
+        if (modalRecText && data.recommended_practice) {
+          modalRecText.textContent = data.recommended_practice;
+        }
+
+        // Skill Learned
+        if (modalSkillLearned && data.skill_learned) {
+          modalSkillLearned.textContent = data.skill_learned;
+        }
+
+        // XP Banner
+        if (data.xp_earned > 0 && modalXpBanner && modalXpText) {
           modalXpBanner.style.display = 'inline-flex';
           modalXpText.textContent = `+${data.xp_earned} XP Earned!`;
         }
-        if (data.next_lesson_number && nextLessonBtn) {
+
+        // Next Lesson Button (Enforces min_accuracy_threshold)
+        if (data.unlocked_next && data.next_lesson_number && nextLessonBtn) {
+          nextLessonBtn.style.display = 'inline-flex';
           nextLessonBtn.href = `/lesson/${data.next_lesson_number}/`;
+        } else if (nextLessonBtn) {
+          nextLessonBtn.style.display = 'none';
         }
+
         // If new achievements unlocked, notify
         if (data.new_achievements && data.new_achievements.length > 0) {
           data.new_achievements.forEach(ach => {
@@ -205,13 +313,61 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => toast.remove(), 6000);
   }
 
+  // Teacher Intro Modal Handlers
+  if (btnStartGuidedPractice && keyIntroModal) {
+    btnStartGuidedPractice.addEventListener('click', () => {
+      keyIntroModal.classList.remove('show');
+      arenaCard.focus();
+    });
+  }
+
+  if (btnShowGuide && keyIntroModal) {
+    btnShowGuide.addEventListener('click', () => {
+      keyIntroModal.classList.add('show');
+    });
+  }
+
+  // Foundation & Posture Modal Handlers
+  if (btnPostureGuide && foundationModal) {
+    btnPostureGuide.addEventListener('click', () => {
+      foundationModal.classList.add('show');
+    });
+  }
+
+  if (btnCloseFoundation && foundationModal) {
+    btnCloseFoundation.addEventListener('click', () => {
+      foundationModal.classList.remove('show');
+      arenaCard.focus();
+    });
+  }
+
   // Keyboard Event Routing
   window.addEventListener('keydown', (e) => {
-    // If modal is open, ignore
-    if (modalBackdrop.classList.contains('show')) return;
+    // If Teacher Intro Modal is open, Enter/Escape begins practice
+    if (keyIntroModal && keyIntroModal.classList.contains('show')) {
+      if (e.key === 'Enter' || e.key === 'Escape') {
+        e.preventDefault();
+        keyIntroModal.classList.remove('show');
+        arenaCard.focus();
+      }
+      return;
+    }
+
+    // If Posture Modal is open, Enter/Escape closes it
+    if (foundationModal && foundationModal.classList.contains('show')) {
+      if (e.key === 'Enter' || e.key === 'Escape') {
+        e.preventDefault();
+        foundationModal.classList.remove('show');
+        arenaCard.focus();
+      }
+      return;
+    }
+
+    // If result modal is open, ignore
+    if (modalBackdrop && modalBackdrop.classList.contains('show')) return;
 
     // Remove focus overlay if user begins typing
-    if (focusOverlay.classList.contains('visible')) {
+    if (focusOverlay && focusOverlay.classList.contains('visible')) {
       focusOverlay.classList.remove('visible');
     }
 
@@ -221,22 +377,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // Focus Handling
   window.addEventListener('blur', () => {
     if (!engine.isCompleted && engine.isStarted) {
-      focusOverlay.classList.add('visible');
+      if (focusOverlay) focusOverlay.classList.add('visible');
     }
   });
 
-  focusOverlay.addEventListener('click', () => {
-    focusOverlay.classList.remove('visible');
-    arenaCard.focus();
-  });
+  if (focusOverlay) {
+    focusOverlay.addEventListener('click', () => {
+      focusOverlay.classList.remove('visible');
+      arenaCard.focus();
+    });
+  }
 
   // Controls Handlers
-  restartBtn.addEventListener('click', () => {
-    engine.reset();
-    renderText();
-    modalBackdrop.classList.remove('show');
-    arenaCard.focus();
-  });
+  if (restartBtn) {
+    restartBtn.addEventListener('click', () => {
+      engine.reset();
+      renderText();
+      modalBackdrop.classList.remove('show');
+      arenaCard.focus();
+    });
+  }
 
   if (retryBtn) {
     retryBtn.addEventListener('click', () => {

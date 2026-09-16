@@ -5,6 +5,153 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/lesson.css' %}">
+<style>
+  /* Learning Objective Banner */
+  .learning-goal-banner {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .goal-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .goal-meta {
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Teacher Module Intro Card */
+  .teacher-intro-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(17, 24, 39, 0.98) 100%);
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-lg);
+    padding: 2.25rem;
+    max-width: 620px;
+    width: 100%;
+    text-align: left;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), var(--shadow-glow);
+  }
+  .teacher-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .teacher-tag {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    text-transform: uppercase;
+    background: rgba(6, 182, 212, 0.12);
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+  }
+  .teach-field {
+    margin-bottom: 1.15rem;
+  }
+  .teach-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.25rem;
+  }
+  .teach-val {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  .teach-val-highlight {
+    color: #60a5fa;
+    font-weight: 800;
+  }
+
+  /* Real-Time Finger Discipline Warning */
+  .finger-warning-callout {
+    position: fixed;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #1e1b4b;
+    border: 2px solid #818cf8;
+    color: #ffffff;
+    padding: 0.85rem 1.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.95rem;
+    font-weight: 700;
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 250ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .finger-warning-callout.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: all;
+  }
+
+  /* Mastery Status in Results Modal */
+  .mastery-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 1rem;
+    border-radius: var(--radius-full);
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .status-mastered { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid #fbbf24; }
+  .status-completed { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid #60a5fa; }
+  .status-needs-practice { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444; }
+
+  /* Most Missed Keys Matrix */
+  .feedback-box {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    text-align: left;
+  }
+  .missed-keys-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.4rem;
+  }
+  .missed-key-tag {
+    background-color: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-sm);
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -16,10 +163,31 @@
        data-lesson-id="{{ lesson.id }}"
        data-lesson-number="{{ lesson.lesson_number }}"
        data-target-text="{{ lesson.target_text }}"
+       data-key-name="{{ lesson.key_name }}"
+       data-target-finger="{{ lesson.target_finger }}"
+       data-finger-hand="{{ lesson.finger_hand }}"
        data-min-wpm3="{{ lesson.min_wpm_3stars }}"
        data-min-wpm4="{{ lesson.min_wpm_4stars }}"
        data-min-wpm5="{{ lesson.min_wpm_5stars }}"
-       data-min-acc="{{ lesson.min_accuracy_threshold }}">
+       data-min-acc="{{ lesson.min_accuracy_threshold }}"
+       data-min-mastery="{{ lesson.min_mastery_accuracy }}">
+  </div>
+
+  <!-- Real-Time Finger Discipline Warning Callout -->
+  <div class="finger-warning-callout" id="finger-warning-callout">
+    <span style="font-size: 1.25rem;">⚠️</span>
+    <span id="finger-warning-text">Use your Left Index Finger for F!</span>
+  </div>
+
+  <!-- Learning Goal Banner (Requirement 14) -->
+  <div class="learning-goal-banner">
+    <div class="goal-title">
+      <span>🎯 TODAY'S OBJECTIVE:</span>
+      <span style="font-weight: 500;">{{ lesson.learning_objective }}</span>
+    </div>
+    <div class="goal-meta">
+      Stage: {{ lesson.get_stage_display }}
+    </div>
   </div>
 
   <!-- Lesson HUD Header -->
@@ -29,11 +197,17 @@
         <span>Lesson {{ lesson.lesson_number }}: {{ lesson.title }}</span>
         <span class="lesson-level-badge">{{ lesson.level_title }}</span>
       </h2>
-      <p>{{ lesson.learning_objective }}</p>
+      <p>Finger Assignment: <strong style="color: var(--accent);">{{ lesson.target_finger }}</strong> ({{ lesson.finger_hand }})</p>
     </div>
 
     <!-- HUD Controls -->
     <div class="lesson-hud-controls">
+      <button class="hud-btn" id="btn-show-guide" title="Review Key Placement & Ergonomics">
+        <span>📖</span><span class="hud-label">Key Guide</span>
+      </button>
+      <button class="hud-btn" id="btn-posture-guide" title="Sitting Position & Hand Posture">
+        <span>🖐️</span><span class="hud-label">Posture</span>
+      </button>
       <button class="hud-btn active" id="toggle-sound" title="Toggle Sound Feedback">
         <span>🔊</span><span class="hud-label">Sound: On</span>
       </button>
@@ -57,11 +231,11 @@
     </div>
     <div class="metric-card metric-acc">
       <div class="metric-val" id="hud-acc">100%</div>
-      <div class="metric-label-sm">Accuracy</div>
+      <div class="metric-label-sm">Accuracy (Min 85%)</div>
     </div>
     <div class="metric-card metric-err">
       <div class="metric-val" id="hud-err">0</div>
-      <div class="metric-label-sm">Errors</div>
+      <div class="metric-label-sm">Mistakes</div>
     </div>
     <div class="metric-card metric-time">
       <div class="metric-val" id="hud-time">0:00</div>
@@ -103,17 +277,11 @@
       <!-- Left Hand SVG -->
       <div style="text-align: center;">
         <svg class="hand-svg" viewBox="0 0 160 140" fill="none">
-          <!-- Palm -->
           <path d="M 40 70 Q 30 110 70 120 Q 110 110 110 70 Z" class="hand-palm" />
-          <!-- Left Pinky -->
           <rect x="25" y="30" width="14" height="42" rx="7" class="hand-finger" data-finger="l-pinky" style="stroke: var(--finger-l-pinky);" />
-          <!-- Left Ring -->
           <rect x="44" y="16" width="14" height="56" rx="7" class="hand-finger" data-finger="l-ring" style="stroke: var(--finger-l-ring);" />
-          <!-- Left Middle -->
           <rect x="63" y="10" width="14" height="62" rx="7" class="hand-finger" data-finger="l-mid" style="stroke: var(--finger-l-mid);" />
-          <!-- Left Index -->
           <rect x="82" y="18" width="14" height="54" rx="7" class="hand-finger" data-finger="l-index" style="stroke: var(--finger-l-index);" />
-          <!-- Left Thumb -->
           <path d="M 98 75 Q 120 70 125 50 Q 115 45 96 65" class="hand-finger" data-finger="thumb" style="stroke: var(--finger-thumbs);" />
         </svg>
         <div style="font-size: 0.75rem; color: var(--text-subtle); margin-top: 0.25rem;">LEFT HAND</div>
@@ -122,17 +290,11 @@
       <!-- Right Hand SVG -->
       <div style="text-align: center;">
         <svg class="hand-svg" viewBox="0 0 160 140" fill="none">
-          <!-- Palm -->
           <path d="M 50 70 Q 50 110 90 120 Q 130 110 120 70 Z" class="hand-palm" />
-          <!-- Right Thumb -->
           <path d="M 62 75 Q 40 70 35 50 Q 45 45 64 65" class="hand-finger" data-finger="thumb" style="stroke: var(--finger-thumbs);" />
-          <!-- Right Index -->
           <rect x="64" y="18" width="14" height="54" rx="7" class="hand-finger" data-finger="r-index" style="stroke: var(--finger-r-index);" />
-          <!-- Right Middle -->
           <rect x="83" y="10" width="14" height="62" rx="7" class="hand-finger" data-finger="r-mid" style="stroke: var(--finger-r-mid);" />
-          <!-- Right Ring -->
           <rect x="102" y="16" width="14" height="56" rx="7" class="hand-finger" data-finger="r-ring" style="stroke: var(--finger-r-ring);" />
-          <!-- Right Pinky -->
           <rect x="121" y="30" width="14" height="42" rx="7" class="hand-finger" data-finger="r-pinky" style="stroke: var(--finger-r-pinky);" />
         </svg>
         <div style="font-size: 0.75rem; color: var(--text-subtle); margin-top: 0.25rem;">RIGHT HAND</div>
@@ -178,7 +340,7 @@
       <div class="kb-key" data-code="Backslash" data-finger="r-pinky"><span class="kb-key-sub">|</span><span class="kb-key-main">\</span></div>
     </div>
 
-    <!-- Row 3: Home Row (F and J bumps!) -->
+    <!-- Row 3: Home Row -->
     <div class="kb-row">
       <div class="kb-key key-caps" data-code="CapsLock" data-finger="l-pinky"><span class="kb-key-main">Caps</span></div>
       <div class="kb-key" data-code="KeyA" data-finger="l-pinky"><span class="kb-key-main">A</span></div>
@@ -246,11 +408,112 @@
 
 </div>
 
-<!-- Completion Results Modal -->
+<!-- ==========================================================================
+     1. TEACHER MODULE / KEY INTRODUCTION MODAL (Requirement 1)
+     ========================================================================== -->
+<div class="modal-backdrop show" id="key-intro-modal">
+  <div class="teacher-intro-card">
+    <div class="teacher-header">
+      <span class="teacher-tag">Key Introduction Phase</span>
+      <span style="color: var(--text-muted); font-size: 0.85rem;">Step 1 of 4: Learn</span>
+    </div>
+
+    <h2 style="font-size: 1.75rem; font-weight: 800; color: #ffffff; margin-bottom: 1.25rem;">
+      {{ lesson.key_name }}
+    </h2>
+
+    <div class="teach-field">
+      <div class="teach-label">Finger &amp; Hand Assignment</div>
+      <div class="teach-val teach-val-highlight">
+        🖐️ {{ lesson.target_finger }} — {{ lesson.finger_hand }}
+      </div>
+    </div>
+
+    <div class="teach-field">
+      <div class="teach-label">Anatomical &amp; Ergonomic Rationale</div>
+      <div class="teach-val" style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6;">
+        {{ lesson.finger_why }}
+      </div>
+    </div>
+
+    <div class="teach-field">
+      <div class="teach-label">Tactile Location &amp; Anchor</div>
+      <div class="teach-val" style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6;">
+        {{ lesson.instruction }}
+      </div>
+    </div>
+
+    {% if lesson.spaced_repetition_keys %}
+      <div class="teach-field" style="background: rgba(59, 130, 246, 0.08); padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid rgba(59, 130, 246, 0.25);">
+        <div class="teach-label" style="color: var(--accent);">Spaced Repetition</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+          Reinforcing previously learned keys in this lesson: <strong>{{ lesson.spaced_repetition_keys }}</strong>
+        </div>
+      </div>
+    {% endif %}
+
+    <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+      <button class="btn btn-primary btn-lg" id="btn-start-guided-practice" style="width: 100%;">
+        I Understand — Start Guided Practice →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     2. FIRST-TIME FOUNDATION & POSTURE MODAL (Requirement 13)
+     ========================================================================== -->
+<div class="modal-backdrop" id="foundation-modal">
+  <div class="teacher-intro-card" style="max-width: 680px;">
+    <div class="teacher-header">
+      <span class="teacher-tag" style="background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: var(--success);">Foundation Tutorial</span>
+      <span style="color: var(--text-muted); font-size: 0.85rem;">Touch Typing Posture &amp; Anchors</span>
+    </div>
+
+    <h2 style="font-size: 1.6rem; font-weight: 800; color: #ffffff; margin-bottom: 1.25rem;">
+      Mastering Physical Touch Typing Habits
+    </h2>
+
+    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.75rem;">
+      <div style="background-color: var(--bg-card); padding: 0.85rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+        <h4 style="font-size: 0.95rem; color: #ffffff; margin-bottom: 0.25rem;">1. Never Look Down at Your Keyboard</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Touch typing relies entirely on tactile muscle memory. If you glance at your fingers, you break the neural reflex loop.</p>
+      </div>
+
+      <div style="background-color: var(--bg-card); padding: 0.85rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+        <h4 style="font-size: 0.95rem; color: #ffffff; margin-bottom: 0.25rem;">2. Find the F and J Guide Bumps</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Both keys have small physical ridges. Your index fingers should naturally seek and anchor on these bumps without looking.</p>
+      </div>
+
+      <div style="background-color: var(--bg-card); padding: 0.85rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+        <h4 style="font-size: 0.95rem; color: #ffffff; margin-bottom: 0.25rem;">3. Floating Wrists &amp; 90-Degree Elbows</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Do not rest your wrists heavily on the table while typing. Keep elbows bent at 90 degrees and wrists floating lightly.</p>
+      </div>
+
+      <div style="background-color: var(--bg-card); padding: 0.85rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+        <h4 style="font-size: 0.95rem; color: #ffffff; margin-bottom: 0.25rem;">4. The 8 Home Keys</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Left hand: A, S, D, F. Right hand: J, K, L, Semicolon (;). Thumbs rest gently over the Space Bar.</p>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-lg" id="btn-close-foundation" style="width: 100%;">
+      Understood! Continue Practice →
+    </button>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     3. COMPLETION RESULTS & REAL FEEDBACK MODAL (Requirements 5, 6, 10, 11)
+     ========================================================================== -->
 <div class="modal-backdrop" id="result-modal-backdrop">
   <div class="result-card">
+    <!-- Status Pill: MASTERED vs COMPLETED vs NEEDS PRACTICE -->
+    <div id="modal-status-pill-container">
+      <span class="mastery-pill status-mastered" id="modal-status-pill">Mastered 🏅</span>
+    </div>
+
     <div class="result-header">
-      <h3 id="modal-title">Lesson Completed!</h3>
+      <h3 id="modal-title">Lesson Mastered!</h3>
       <p id="modal-subtitle">Great touch-typing cadence.</p>
     </div>
 
@@ -271,12 +534,37 @@
       </div>
       <div class="stat-box">
         <span class="val" id="modal-err">0</span>
-        <span class="lbl">Errors</span>
+        <span class="lbl">Mistakes</span>
       </div>
     </div>
 
-    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-      Time elapsed: <strong id="modal-time" style="color: var(--text-main);">0s</strong>
+    <!-- Actionable Diagnostics & Real Feedback (Requirement 10) -->
+    <div class="feedback-box">
+      <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em;">
+        Diagnostic Feedback
+      </div>
+      <div id="modal-feedback-text" style="font-size: 0.9rem; color: var(--text-main); margin-top: 0.25rem;">
+        Your accuracy is good, but you frequently missed J.
+      </div>
+      
+      <!-- Most Missed Keys -->
+      <div id="modal-missed-keys-container" style="display: none; margin-top: 0.6rem;">
+        <div style="font-size: 0.75rem; color: var(--text-subtle); text-transform: uppercase;">Most Missed Keys:</div>
+        <div class="missed-keys-row" id="modal-missed-keys-list">
+          <!-- Tag pills injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Actionable Recommendation -->
+      <div id="modal-recommendation-box" style="margin-top: 0.6rem; font-size: 0.85rem; color: var(--text-muted);">
+        <strong>Recommendation:</strong> <span id="modal-recommendation-text">Practice J + F before moving on.</span>
+      </div>
+    </div>
+
+    <!-- Skill Learned (Requirement 14) -->
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; text-align: left; background: rgba(59, 130, 246, 0.06); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+      <span style="color: var(--primary); font-weight: 700;">Skill Learned:</span>
+      <span id="modal-skill-learned">{{ lesson.skill_learned }}</span>
     </div>
 
     <!-- XP Gained Banner -->
@@ -286,8 +574,9 @@
 
     <!-- Modal Actions -->
     <div class="result-actions">
-      <button class="btn btn-secondary" id="modal-btn-retry">🔄 Retry Lesson</button>
-      <a href="{% url 'course_map' %}" class="btn btn-secondary">📋 Course Map</a>
+      <button class="btn btn-secondary" id="modal-btn-retry">🔄 Retry Practice</button>
+      <a href="/practice/" class="btn btn-secondary" id="modal-btn-drill">🎯 Weak Keys Drill</a>
+      <a href="{% url 'course_map' %}" class="btn btn-secondary">📋 Map</a>
       <a href="#" class="btn btn-primary" id="modal-btn-next">Next Lesson →</a>
     </div>
   </div>

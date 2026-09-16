@@ -31,6 +31,7 @@ class TypingEngine {
     this.onProgress = options.onProgress || null;
     this.onComplete = options.onComplete || null;
     this.onMistake = options.onMistake || null;
+    this.onFingerWarning = options.onFingerWarning || null;
   }
 
   startTimer() {
@@ -118,6 +119,11 @@ class TypingEngine {
 
       if (this.onMistake) {
         this.onMistake(expectedChar, inputChar);
+      }
+
+      // Check if user is repeatedly struggling with this key
+      if (this.keyMistakes[mistakeKey] >= 2 && this.onFingerWarning) {
+        this.onFingerWarning(expectedChar, this.keyMistakes[mistakeKey]);
       }
 
       if (this.onCharTyped) {

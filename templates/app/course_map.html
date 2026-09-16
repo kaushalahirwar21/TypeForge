@@ -19,11 +19,15 @@
     <!-- Summary Stats Chips -->
     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
       <div style="background-color: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; text-align: center;">
+        <div style="font-size: 1.5rem; font-weight: 800; color: #fbbf24;">🏅 {{ mastered_count }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Mastered</div>
+      </div>
+      <div style="background-color: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; text-align: center;">
         <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent);">{{ completed_count }} / {{ total_lessons }}</div>
         <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Completed</div>
       </div>
       <div style="background-color: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.75rem 1.25rem; text-align: center;">
-        <div style="font-size: 1.5rem; font-weight: 800; color: #fbbf24;">★ {{ total_stars }}</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #38bdf8;">★ {{ total_stars }}</div>
         <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Stars Earned</div>
       </div>
     </div>
@@ -40,15 +44,17 @@
           <span class="badge badge-secondary" style="font-size: 0.75rem;">{{ lvl.lessons|length }} Lessons</span>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem;">
+        <div style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); display: grid; gap: 1.25rem;">
           {% for item in lvl.lessons %}
-            <div class="card" style="padding: 1.25rem; position: relative; display: flex; flex-direction: column; justify-content: space-between; {% if not item.is_unlocked %}opacity: 0.55; filter: grayscale(0.6);{% endif %} {% if item.is_completed %}border-color: rgba(16, 185, 129, 0.4);{% endif %}">
+            <div class="card" style="padding: 1.25rem; position: relative; display: flex; flex-direction: column; justify-content: space-between; {% if not item.is_unlocked %}opacity: 0.55; filter: grayscale(0.6);{% endif %} {% if item.is_mastered %}border-color: rgba(251, 191, 36, 0.6); box-shadow: 0 0 15px rgba(251, 191, 36, 0.12);{% elif item.is_completed %}border-color: rgba(59, 130, 246, 0.45);{% endif %}">
               <div>
                 <!-- Top Row: Lesson Number & Status Badge -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
                   <span style="font-size: 0.8rem; font-weight: 800; color: var(--accent);">LESSON {{ item.lesson.lesson_number }}</span>
-                  {% if item.is_completed %}
-                    <span class="badge badge-success" style="font-size: 0.7rem;">✓ Done</span>
+                  {% if item.is_mastered %}
+                    <span class="badge" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid #fbbf24; font-size: 0.7rem;">🏅 Mastered</span>
+                  {% elif item.is_completed %}
+                    <span class="badge badge-success" style="font-size: 0.7rem;">✓ Completed</span>
                   {% elif item.is_unlocked %}
                     <span class="badge badge-primary" style="font-size: 0.7rem;">Ready</span>
                   {% else %}
@@ -60,6 +66,11 @@
                 <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem; line-height: 1.3;">
                   {{ item.lesson.title }}
                 </h3>
+
+                <!-- Finger & Key Assignment -->
+                <div style="font-size: 0.78rem; color: var(--text-subtle); margin-bottom: 0.5rem;">
+                  Finger: <strong style="color: var(--accent);">{{ item.lesson.target_finger }}</strong>
+                </div>
 
                 <!-- Keys Introduced -->
                 {% if item.lesson.keys_introduced %}

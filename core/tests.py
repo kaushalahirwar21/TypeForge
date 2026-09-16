@@ -221,3 +221,74 @@ class TypeForgeViewAndAPITests(TestCase):
         self.assertTrue(data['success'])
         self.assertGreater(data['xp_earned'], 0)
         self.assertTrue(TypingTestResult.objects.filter(user=self.user).exists())
+
+    def test_low_accuracy_blocks_unlocking_and_flags_needs_practice(self):
+        self.client.login(username='speedster', password='StrongPassword123')
+
+        # Submit lesson with 80% accuracy (< 85% threshold)
+        payload = {
+            'lesson_id': self.lesson1.id,
+            'wpm': 25.0,
+            'raw_wpm': 28.0,
+            'accuracy': 80.0,
+            'mistakes_count': 6,
+            'duration_seconds': 14.0,
+            'characters_typed': 30,
+            'key_mistakes': {'f': 4, 'j': 2}
+        }
+        response = self.client.post(
+            reverse('api_submit_lesson'),
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['status'], 'NEEDS_PRACTICE')
+        self.assertFalse(data['unlocked_next'])
+        self.assertEqual(data['stars'], 0)
+        self.assertIn('Focus key recommendation', data['recommended_practice'])
+
+        # Confirm next lesson remains locked
+        progress2 = LessonProgress.objects.filter(user=self.user, lesson=self.lesson2).first()
+        self.assertTrue(progress2 is None or not progress2.unlocked)
+
+    def test_high_accuracy_awards_mastery(self):
+        self.client.login(username='speedster', password='StrongPassword123')
+
+        # Submit lesson with 95% accuracy and good WPM
+        payload = {
+            'lesson_id': self.lesson1.id,
+            'wpm': 25.0,
+            'raw_wpm': 26.0,
+            'accuracy': 95.0,
+            'mistakes_count': 1,
+            'duration_seconds': 10.0,
+            'characters_typed': 30,
+            'key_mistakes': {'j': 1}
+        }
+        response = self.client.post(
+            reverse('api_submit_lesson'),
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['status'], 'MASTERED')
+        self.assertTrue(data['is_mastered'])
+        self.assertTrue(data['unlocked_next'])
+
+        # Verify LessonProgress has is_mastered = True
+        progress1 = LessonProgress.objects.get(user=self.user, lesson=self.lesson1)
+        self.assertTrue(progress1.is_mastered)
+        self.assertGreaterEqual(progress1.mastery_count, 1)
+
+    def test_api_generate_weak_drill(self):
+        response = self.client.get(reverse('api_generate_weak_drill') + '?keys=f,j')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['keys'], ['f', 'j'])
+        self.assertIn('f', data['drill_text'])
+        self.assertIn('j', data['drill_text'])

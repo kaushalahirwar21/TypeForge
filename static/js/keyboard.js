@@ -188,6 +188,12 @@ class TypeForgeKeyboard {
       this.promptTextElem.innerHTML = `Press <span class="finger-name">${keyDisplay}${shiftNote}</span> with your <span class="finger-name">${mapping.name}</span>`;
     }
   }
+
+  getMapping(char) {
+    return KEY_MAPPINGS[char] || null;
+  }
 }
 
+window.KEY_MAPPINGS = KEY_MAPPINGS;
 window.TypeForgeKeyboard = TypeForgeKeyboard;
+

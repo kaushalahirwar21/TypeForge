@@ -182,11 +182,13 @@ def dashboard(request):
 
     # Recent Achievements
     user_achievements = UserAchievement.objects.filter(user=user).select_related('achievement')[:5]
+    mastered_count = LessonProgress.objects.filter(user=user, is_mastered=True).count()
 
     return render(request, 'app/dashboard.html', {
         'profile': profile,
         'total_lessons_count': total_lessons_count,
         'completed_count': completed_count,
+        'mastered_count': mastered_count,
         'progress_percentage': progress_percentage,
         'current_lesson': current_lesson,
         'avg_wpm': round(avg_wpm, 1),
@@ -226,6 +228,7 @@ def course_map(request):
         progress = user_progress_map.get(lesson.id)
         is_unlocked = progress.unlocked if progress else False
         is_completed = progress.completed if progress else False
+        is_mastered = progress.is_mastered if progress else False
         stars = progress.stars if progress else 0
         best_wpm = progress.best_wpm if progress else 0.0
 
@@ -233,6 +236,7 @@ def course_map(request):
             'lesson': lesson,
             'is_unlocked': is_unlocked,
             'is_completed': is_completed,
+            'is_mastered': is_mastered,
             'stars': stars,
             'best_wpm': round(best_wpm, 1),
         })
@@ -242,12 +246,14 @@ def course_map(request):
     # Count totals
     total_lessons = lessons.count()
     completed_count = sum(1 for p in user_progress_map.values() if p.completed)
+    mastered_count = sum(1 for p in user_progress_map.values() if p.is_mastered)
     total_stars = sum(p.stars for p in user_progress_map.values())
 
     return render(request, 'app/course_map.html', {
         'levels': levels_list,
         'total_lessons': total_lessons,
         'completed_count': completed_count,
+        'mastered_count': mastered_count,
         'total_stars': total_stars,
     })
 
@@ -277,6 +283,37 @@ def lesson_view(request, lesson_number):
         'is_unlocked': is_unlocked,
         'prev_lesson': prev_lesson,
         'next_lesson': next_lesson,
+    })
+
+
+def practice_view(request):
+    """Dedicated targeted practice arena for weak keys and custom repetition drills."""
+    keys_param = request.GET.get('keys', '')
+    keys = [k.strip().lower() for k in keys_param.split(',') if k.strip()]
+
+    # Default to user's most missed keys if authenticated
+    if not keys and request.user.is_authenticated:
+        recent = TypingSession.objects.filter(user=request.user)[:15]
+        agg_mistakes = {}
+        for s in recent:
+            if s.key_mistakes and isinstance(s.key_mistakes, dict):
+                for k, v in s.key_mistakes.items():
+                    agg_mistakes[k.lower()] = agg_mistakes.get(k.lower(), 0) + int(v)
+        sorted_keys = sorted(agg_mistakes.items(), key=lambda x: x[1], reverse=True)
+        keys = [item[0] for item in sorted_keys[:3]]
+
+    if not keys:
+        keys = ['f', 'j', 'd', 'k']
+
+    # Generate progressive repetition drill
+    part1 = " ".join([f"{k} {k} {k} {k} {k}{k}" for k in keys])
+    part2 = " ".join([f"{k}f f{k} {k}j j{k}" for k in keys])
+    drill_text = f"{part1} {part2}"
+
+    return render(request, 'app/practice.html', {
+        'drill_title': f"Targeted Drill: {' & '.join([k.upper() for k in keys])}",
+        'target_keys': keys,
+        'drill_text': drill_text,
     })
 
 
@@ -411,7 +448,13 @@ def settings_view(request):
 
 @require_POST
 def api_submit_lesson(request):
-    """Saves completed lesson run, unlocks next lesson, evaluates XP & achievements."""
+    """
+    Pedagogical submission handler:
+    - Enforces Accuracy First (<85% requires retry, does NOT unlock next lesson).
+    - Differentiates between 'COMPLETED' and 'MASTERED' (>=90% accuracy).
+    - Identifies most-missed keys and suggests concrete targeted practice.
+    - Reinforces skill learned and awards XP accordingly.
+    """
     try:
         data = json.loads(request.body)
         lesson_id = data.get('lesson_id')
@@ -425,10 +468,47 @@ def api_submit_lesson(request):
 
         lesson = get_object_or_404(Lesson, id=lesson_id)
         stars = lesson.calculate_stars(wpm, accuracy)
+        is_mastered = lesson.is_performance_mastered(wpm, accuracy, mistakes_count)
+
+        # Determine pedagogical status
+        if accuracy < lesson.min_accuracy_threshold:
+            status = 'NEEDS_PRACTICE'
+            title = 'Practice Recommended'
+            feedback_msg = f'Accuracy was {accuracy:.1f}%. Touch typing requires precision before speed. Aim for at least {lesson.min_accuracy_threshold:.0f}% to unlock the next lesson.'
+        elif is_mastered:
+            status = 'MASTERED'
+            title = 'Lesson Mastered! 🏅'
+            feedback_msg = f'Mastery achieved with {accuracy:.1f}% accuracy! Excellent finger habits and muscle memory.'
+        else:
+            status = 'COMPLETED'
+            title = 'Lesson Completed'
+            feedback_msg = f'Completed with {accuracy:.1f}% accuracy. Good effort! Practicing once more is recommended to reach 90%+ Mastery.'
+
+        # Analyze most-missed keys
+        sorted_missed = sorted(
+            [{'key': str(k).upper(), 'count': int(v)} for k, v in key_mistakes.items() if int(v) > 0],
+            key=lambda x: x['count'],
+            reverse=True
+        )
+
+        # Generate targeted practice advice
+        if sorted_missed:
+            top_missed_str = ", ".join([f"{item['key']} ({item['count']} misses)" for item in sorted_missed[:3]])
+            recommended_practice = f"Focus key recommendation: Practice {sorted_missed[0]['key']} with home row anchors for 2 minutes before moving on."
+        else:
+            top_missed_str = "None! Zero recurring mistakes."
+            recommended_practice = "Zero persistent errors detected. Keep your rhythm smooth."
 
         response_data = {
             'success': True,
+            'status': status,
+            'title': title,
+            'feedback_msg': feedback_msg,
+            'recommended_practice': recommended_practice,
+            'skill_learned': lesson.skill_learned,
+            'most_missed_keys': sorted_missed[:5],
             'stars': stars,
+            'is_mastered': is_mastered,
             'xp_earned': 0,
             'unlocked_next': False,
             'next_lesson_number': None,
@@ -464,27 +544,34 @@ def api_submit_lesson(request):
                 progress.best_accuracy = accuracy
 
             is_first_time_completion = False
-            if stars >= 1:
+            # Only complete if accuracy >= threshold
+            if accuracy >= lesson.min_accuracy_threshold:
                 if not progress.completed:
                     is_first_time_completion = True
                     progress.completed = True
                     progress.first_completed_at = timezone.now()
                 if stars > progress.stars:
                     progress.stars = stars
+                if is_mastered:
+                    if not progress.is_mastered:
+                        progress.is_mastered = True
+                    progress.mastery_count += 1
             progress.save()
 
-            # Award XP: Base XP + Bonus for Stars and Accuracy
-            xp_earned = 20 + (stars * 10)
+            # Award XP: Base XP + Mastery Bonus
+            xp_earned = 15
+            if accuracy >= lesson.min_accuracy_threshold:
+                xp_earned += 15 + (stars * 10)
+            if is_mastered:
+                xp_earned += 25
             if is_first_time_completion:
-                xp_earned += 30
-            if accuracy == 100:
                 xp_earned += 25
             
             profile.add_xp(xp_earned)
             response_data['xp_earned'] = xp_earned
 
-            # Unlock Next Lesson if passed with >= 1 star
-            if stars >= 1:
+            # Only unlock next lesson if threshold is met (accuracy >= 85%)
+            if accuracy >= lesson.min_accuracy_threshold:
                 next_lesson = Lesson.objects.filter(lesson_number__gt=lesson.lesson_number).order_by('lesson_number').first()
                 if next_lesson:
                     next_progress, _ = LessonProgress.objects.get_or_create(user=user, lesson=next_lesson)
@@ -511,6 +598,47 @@ def api_submit_lesson(request):
 
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def api_generate_weak_drill(request):
+    """Generates a targeted drill based on weak keys with single-key reps, patterns, and words."""
+    keys_param = request.GET.get('keys', '')
+    keys = [k.strip().lower() for k in keys_param.split(',') if k.strip()]
+
+    # If no keys passed, look at user's recent sessions
+    if not keys and request.user.is_authenticated:
+        recent = TypingSession.objects.filter(user=request.user)[:10]
+        agg_mistakes = {}
+        for s in recent:
+            if s.key_mistakes and isinstance(s.key_mistakes, dict):
+                for k, v in s.key_mistakes.items():
+                    agg_mistakes[k.lower()] = agg_mistakes.get(k.lower(), 0) + int(v)
+        sorted_keys = sorted(agg_mistakes.items(), key=lambda x: x[1], reverse=True)
+        keys = [item[0] for item in sorted_keys[:3]]
+
+    if not keys:
+        keys = ['f', 'j']
+
+    # Build progressive drill:
+    # 1. Single-key reps
+    part1 = " ".join([f"{k} {k} {k} {k} {k}{k}" for k in keys])
+    # 2. Alternating pairs with home anchors f and j
+    part2 = " ".join([f"{k}f f{k} {k}j j{k}" for k in keys])
+    # 3. Simple combinations
+    combos = []
+    for k in keys:
+        combos.extend([f"{k}a", f"a{k}", f"{k}s", f"s{k}", f"{k}d", f"d{k}"])
+    part3 = " ".join(combos[:8])
+
+    drill_text = f"{part1} {part2} {part3}"
+
+    return JsonResponse({
+        'success': True,
+        'keys': keys,
+        'drill_text': drill_text,
+        'title': f"Targeted Drill: {' & '.join([k.upper() for k in keys])}"
+    })
+
 
 
 @require_POST
