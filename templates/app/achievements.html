@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Achievements & Badges — TypeForge{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem 5rem 1.5rem;">
+
+  <!-- Header Banner -->
+  <div class="card" style="margin-bottom: 2.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(17, 24, 39, 0.95) 100%);">
+    <div>
+      <span class="badge badge-primary" style="margin-bottom: 0.5rem;">Typing Milestones</span>
+      <h1 style="font-size: 2rem; font-weight: 800; color: #ffffff; margin-bottom: 0.35rem;">Badges &amp; Achievements</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 600px;">
+        Earn experience points (XP) and unlock exclusive badges as you conquer typing speed milestones, accuracy records, and consistency streaks.
+      </p>
+    </div>
+
+    <!-- Progress Pill -->
+    <div style="background-color: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.5rem; text-align: center; min-width: 220px;">
+      <div style="font-size: 1.75rem; font-weight: 800; color: var(--accent);">{{ unlocked_count }} / {{ total_count }}</div>
+      <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Badges Unlocked</div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width: {{ percentage }}%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Achievements Categorized Grid -->
+  <div style="display: flex; flex-direction: column; gap: 2.5rem;">
+    {% for category_name, items in categories.items %}
+      <div>
+        <h2 style="font-size: 1.35rem; font-weight: 800; color: #ffffff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>{{ category_name }}</span>
+          <span class="badge badge-secondary" style="font-size: 0.75rem;">{{ items|length }} Badges</span>
+        </h2>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem;">
+          {% for item in items %}
+            <div class="card" style="padding: 1.5rem; display: flex; gap: 1rem; align-items: flex-start; {% if not item.is_unlocked %}opacity: 0.45; filter: grayscale(0.8);{% else %}border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);{% endif %}">
+              <div style="width: 48px; height: 48px; border-radius: var(--radius-md); background: {% if item.is_unlocked %}linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%){% else %}var(--bg-card){% endif %}; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; color: white;">
+                {% if item.is_unlocked %}🏆{% else %}🔒{% endif %}
+              </div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                  <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin: 0;">{{ item.achievement.title }}</h4>
+                  <span style="font-size: 0.75rem; font-weight: 700; color: var(--warning);">+{{ item.achievement.xp_reward }} XP</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin: 0;">
+                  {{ item.achievement.description }}
+                </p>
+                <div style="margin-top: 0.75rem;">
+                  {% if item.is_unlocked %}
+                    <span class="badge badge-success" style="font-size: 0.65rem;">✓ Unlocked</span>
+                  {% else %}
+                    <span class="badge badge-secondary" style="font-size: 0.65rem;">In Progress</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

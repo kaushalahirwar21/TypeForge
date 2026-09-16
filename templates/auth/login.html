@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Log In — TypeForge{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 4.5rem 1.5rem; max-width: 460px;">
+  <div class="card" style="padding: 2.5rem 2rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <img src="{% static 'img/logo.svg' %}" alt="TypeForge" width="48" height="48" style="margin-bottom: 0.75rem;">
+      <h1 style="font-size: 1.75rem; font-weight: 800; color: #ffffff;">Welcome Back</h1>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Log in to continue your typing streak.</p>
+    </div>
+
+    <form method="POST" action="{% url 'login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" novalidate>
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.username.id_for_label }}">Username or Email</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <div class="form-error">{{ form.username.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <label class="form-label" for="{{ form.password.id_for_label }}" style="margin-bottom: 0;">Password</label>
+          <a href="{% url 'forgot_password' %}" style="font-size: 0.8rem;">Forgot password?</a>
+        </div>
+        {{ form.password }}
+        {% if form.password.errors %}
+          <div class="form-error">{{ form.password.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem; margin-top: 0.5rem;">
+        Log In
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.75rem; font-size: 0.9rem; color: var(--text-muted);">
+      Don't have an account yet? <a href="{% url 'signup' %}" style="font-weight: 600;">Sign Up Free</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

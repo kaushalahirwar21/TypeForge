@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Help & FAQ — TypeForge Hand Placement & Guides{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 3.5rem 1.5rem 5rem 1.5rem; max-width: 960px;">
+  <div style="text-align: center; margin-bottom: 3rem;">
+    <span class="badge badge-primary" style="margin-bottom: 0.75rem;">Reference & Support</span>
+    <h1 style="font-size: 2.5rem; font-weight: 800; color: #ffffff; margin-bottom: 0.75rem;">Touch Typing Guide &amp; FAQ</h1>
+    <p style="font-size: 1.1rem; color: var(--text-muted); max-width: 600px; margin: 0 auto;">
+      Master finger placements, optimize your desk posture, and find answers to common questions.
+    </p>
+  </div>
+
+  <!-- Finger Mapping Reference Card -->
+  <div class="card" style="margin-bottom: 2.5rem;">
+    <h2 style="font-size: 1.4rem; color: #ffffff; margin-bottom: 1.25rem;">Standard Touch Typing Finger Mapping</h2>
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+            <th style="padding: 0.75rem; color: var(--text-main);">Finger</th>
+            <th style="padding: 0.75rem; color: var(--text-main);">Home Key</th>
+            <th style="padding: 0.75rem; color: var(--text-main);">Assigned Keys</th>
+            <th style="padding: 0.75rem; color: var(--text-main);">Color Code</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 0.75rem; font-weight: 600;">Left Pinky</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--primary);">A</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono);">1, Q, A, Z, Left Shift, Tab</td>
+            <td style="padding: 0.75rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color: var(--finger-l-pinky);"></span> Rose</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 0.75rem; font-weight: 600;">Left Ring</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--primary);">S</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono);">2, W, S, X</td>
+            <td style="padding: 0.75rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color: var(--finger-l-ring);"></span> Amber</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 0.75rem; font-weight: 600;">Left Middle</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--primary);">D</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono);">3, E, D, C</td>
+            <td style="padding: 0.75rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color: var(--finger-l-mid);"></span> Emerald</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 0.75rem; font-weight: 600;">Left Index</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--primary);">F (Bump)</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono);">4, 5, R, T, F, G, V, B</td>
+            <td style="padding: 0.75rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color: var(--finger-l-index);"></span> Royal Blue</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 0.75rem; font-weight: 600;">Thumbs</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--primary);">Space</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono);">Space Bar</td>
+            <td style="padding: 0.75rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color: var(--finger-thumbs);"></span> Indigo</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 0.75rem; font-weight: 600;">Right Index</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--primary);">J (Bump)</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono);">6, 7, Y, U, H, J, N, M</td>
+            <td style="padding: 0.75rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color: var(--finger-r-index);"></span> Cyan</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 0.75rem; font-weight: 600;">Right Middle</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--primary);">K</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono);">8, I, K, , (comma)</td>
+            <td style="padding: 0.75rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color: var(--finger-r-mid);"></span> Teal</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 0.75rem; font-weight: 600;">Right Ring</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--primary);">L</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono);">9, O, L, . (period)</td>
+            <td style="padding: 0.75rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color: var(--finger-r-ring);"></span> Purple</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.75rem; font-weight: 600;">Right Pinky</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono); color: var(--primary);">; (Semicolon)</td>
+            <td style="padding: 0.75rem; font-family: var(--font-mono);">0, -, =, P, [, ], ;, ', /, Enter</td>
+            <td style="padding: 0.75rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color: var(--finger-r-pinky);"></span> Fuchsia</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Ergonomics & Posture Card -->
+  <div class="card" style="margin-bottom: 2.5rem;">
+    <h2 style="font-size: 1.4rem; color: #ffffff; margin-bottom: 1rem;">Ergonomics &amp; Typing Posture Checklist</h2>
+    <ul style="list-style-type: none; display: flex; flex-direction: column; gap: 0.75rem;">
+      <li style="display: flex; gap: 0.75rem; color: var(--text-muted);"><span style="color: var(--success); font-weight: 800;">✓</span> <strong>Seat Height:</strong> Adjust your chair so your thighs are horizontal and feet flat on the floor.</li>
+      <li style="display: flex; gap: 0.75rem; color: var(--text-muted);"><span style="color: var(--success); font-weight: 800;">✓</span> <strong>Elbow Angle:</strong> Keep elbows bent at approximately 90 degrees with forearms parallel to your desk.</li>
+      <li style="display: flex; gap: 0.75rem; color: var(--text-muted);"><span style="color: var(--success); font-weight: 800;">✓</span> <strong>Floating Wrists:</strong> Do not rest your wrists heavily on the table or keyboard edge while typing; let them hover gently.</li>
+      <li style="display: flex; gap: 0.75rem; color: var(--text-muted);"><span style="color: var(--success); font-weight: 800;">✓</span> <strong>Eye Level:</strong> Position the top third of your monitor at eye level to prevent neck strain.</li>
+    </ul>
+  </div>
+
+  <!-- Frequently Asked Questions -->
+  <div class="card">
+    <h2 style="font-size: 1.4rem; color: #ffffff; margin-bottom: 1.5rem;">Frequently Asked Questions</h2>
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <div>
+        <h4 style="font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.4rem;">How long does it take to learn touch typing?</h4>
+        <p style="color: var(--text-muted); line-height: 1.6;">Most learners see substantial gains in 2 to 3 weeks of daily 15-minute practice. By completing all 13 levels on TypeForge, beginners typically reach 40–60 WPM, and intermediate typists frequently break 80+ WPM.</p>
+      </div>
+
+      <div>
+        <h4 style="font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.4rem;">Should I prioritize speed or accuracy first?</h4>
+        <p style="color: var(--text-muted); line-height: 1.6;">Always prioritize accuracy first. Typing fast with frequent errors slows you down significantly due to corrections. Once your accuracy consistently exceeds 95–98%, speed develops naturally and effortlessly.</p>
+      </div>
+
+      <div>
+        <h4 style="font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.4rem;">Can I turn off the sound effects or virtual keyboard?</h4>
+        <p style="color: var(--text-muted); line-height: 1.6;">Yes! The lesson screen includes instant toggles for sound, virtual keyboard, and hand guide. You can also customize your global defaults in the <a href="{% url 'settings' %}">Settings</a> page.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

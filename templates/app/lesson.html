@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lesson {{ lesson.lesson_number }}: {{ lesson.title }} — TypeForge{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/lesson.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container lesson-layout">
+
+  <!-- Hidden Meta Element for JS Engine -->
+  <div id="lesson-meta-data"
+       style="display: none;"
+       data-lesson-id="{{ lesson.id }}"
+       data-lesson-number="{{ lesson.lesson_number }}"
+       data-target-text="{{ lesson.target_text }}"
+       data-min-wpm3="{{ lesson.min_wpm_3stars }}"
+       data-min-wpm4="{{ lesson.min_wpm_4stars }}"
+       data-min-wpm5="{{ lesson.min_wpm_5stars }}"
+       data-min-acc="{{ lesson.min_accuracy_threshold }}">
+  </div>
+
+  <!-- Lesson HUD Header -->
+  <div class="lesson-header-card">
+    <div class="lesson-meta-box">
+      <h2>
+        <span>Lesson {{ lesson.lesson_number }}: {{ lesson.title }}</span>
+        <span class="lesson-level-badge">{{ lesson.level_title }}</span>
+      </h2>
+      <p>{{ lesson.learning_objective }}</p>
+    </div>
+
+    <!-- HUD Controls -->
+    <div class="lesson-hud-controls">
+      <button class="hud-btn active" id="toggle-sound" title="Toggle Sound Feedback">
+        <span>🔊</span><span class="hud-label">Sound: On</span>
+      </button>
+      <button class="hud-btn active" id="toggle-keyboard" title="Toggle Virtual Keyboard">
+        <span>⌨️</span><span class="hud-label">Keyboard</span>
+      </button>
+      <button class="hud-btn active" id="toggle-hand-guide" title="Toggle Hand Guide">
+        <span>🖐️</span><span class="hud-label">Hand Guide</span>
+      </button>
+      <button class="hud-btn" id="btn-restart-lesson" title="Restart Current Lesson">
+        <span>🔄</span><span class="hud-label">Restart</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Live Metrics Banner -->
+  <div class="metrics-banner">
+    <div class="metric-card metric-wpm">
+      <div class="metric-val" id="hud-wpm">0</div>
+      <div class="metric-label-sm">WPM Speed</div>
+    </div>
+    <div class="metric-card metric-acc">
+      <div class="metric-val" id="hud-acc">100%</div>
+      <div class="metric-label-sm">Accuracy</div>
+    </div>
+    <div class="metric-card metric-err">
+      <div class="metric-val" id="hud-err">0</div>
+      <div class="metric-label-sm">Errors</div>
+    </div>
+    <div class="metric-card metric-time">
+      <div class="metric-val" id="hud-time">0:00</div>
+      <div class="metric-label-sm">Time Elapsed</div>
+    </div>
+  </div>
+
+  <!-- Lesson Progress Bar -->
+  <div class="lesson-progress-container">
+    <div class="lesson-progress-bar" id="lesson-progress-bar"></div>
+  </div>
+
+  <!-- The Typing Arena -->
+  <div class="typing-arena-card arena-focused {% if user_settings.font_size == 'small' %}font-size-small{% elif user_settings.font_size == 'large' %}font-size-large{% else %}font-size-medium{% endif %}" id="typing-arena-card" tabindex="0">
+    <div class="arena-instruction">
+      <span>💡</span>
+      <span>{{ lesson.instruction }}</span>
+    </div>
+
+    <div class="typing-text-display" id="typing-text-display">
+      <!-- Target character spans rendered dynamically via JS -->
+    </div>
+
+    <!-- Focus Loss Warning Overlay -->
+    <div class="focus-overlay" id="focus-overlay">
+      <div class="focus-notice">
+        <span>⚡ Click here or press any key to focus typing arena</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hand Guide with SVG Vector Hands -->
+  <div class="hand-guide-section {% if not user_settings.hand_guide_visible %}hidden-element{% endif %}" id="hand-guide">
+    <div class="guide-prompt-banner" id="guide-prompt-banner">
+      <span id="guide-instruction-text">Place fingers on home row F and J</span>
+    </div>
+
+    <div class="hands-svg-container">
+      <!-- Left Hand SVG -->
+      <div style="text-align: center;">
+        <svg class="hand-svg" viewBox="0 0 160 140" fill="none">
+          <!-- Palm -->
+          <path d="M 40 70 Q 30 110 70 120 Q 110 110 110 70 Z" class="hand-palm" />
+          <!-- Left Pinky -->
+          <rect x="25" y="30" width="14" height="42" rx="7" class="hand-finger" data-finger="l-pinky" style="stroke: var(--finger-l-pinky);" />
+          <!-- Left Ring -->
+          <rect x="44" y="16" width="14" height="56" rx="7" class="hand-finger" data-finger="l-ring" style="stroke: var(--finger-l-ring);" />
+          <!-- Left Middle -->
+          <rect x="63" y="10" width="14" height="62" rx="7" class="hand-finger" data-finger="l-mid" style="stroke: var(--finger-l-mid);" />
+          <!-- Left Index -->
+          <rect x="82" y="18" width="14" height="54" rx="7" class="hand-finger" data-finger="l-index" style="stroke: var(--finger-l-index);" />
+          <!-- Left Thumb -->
+          <path d="M 98 75 Q 120 70 125 50 Q 115 45 96 65" class="hand-finger" data-finger="thumb" style="stroke: var(--finger-thumbs);" />
+        </svg>
+        <div style="font-size: 0.75rem; color: var(--text-subtle); margin-top: 0.25rem;">LEFT HAND</div>
+      </div>
+
+      <!-- Right Hand SVG -->
+      <div style="text-align: center;">
+        <svg class="hand-svg" viewBox="0 0 160 140" fill="none">
+          <!-- Palm -->
+          <path d="M 50 70 Q 50 110 90 120 Q 130 110 120 70 Z" class="hand-palm" />
+          <!-- Right Thumb -->
+          <path d="M 62 75 Q 40 70 35 50 Q 45 45 64 65" class="hand-finger" data-finger="thumb" style="stroke: var(--finger-thumbs);" />
+          <!-- Right Index -->
+          <rect x="64" y="18" width="14" height="54" rx="7" class="hand-finger" data-finger="r-index" style="stroke: var(--finger-r-index);" />
+          <!-- Right Middle -->
+          <rect x="83" y="10" width="14" height="62" rx="7" class="hand-finger" data-finger="r-mid" style="stroke: var(--finger-r-mid);" />
+          <!-- Right Ring -->
+          <rect x="102" y="16" width="14" height="56" rx="7" class="hand-finger" data-finger="r-ring" style="stroke: var(--finger-r-ring);" />
+          <!-- Right Pinky -->
+          <rect x="121" y="30" width="14" height="42" rx="7" class="hand-finger" data-finger="r-pinky" style="stroke: var(--finger-r-pinky);" />
+        </svg>
+        <div style="font-size: 0.75rem; color: var(--text-subtle); margin-top: 0.25rem;">RIGHT HAND</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Virtual Keyboard -->
+  <div class="keyboard-section {% if not user_settings.keyboard_visible %}hidden-element{% endif %}" id="virtual-keyboard">
+    <!-- Row 1: Numbers & Symbols -->
+    <div class="kb-row">
+      <div class="kb-key" data-code="Backquote" data-finger="l-pinky"><span class="kb-key-sub">~</span><span class="kb-key-main">`</span></div>
+      <div class="kb-key" data-code="Digit1" data-finger="l-pinky"><span class="kb-key-sub">!</span><span class="kb-key-main">1</span></div>
+      <div class="kb-key" data-code="Digit2" data-finger="l-ring"><span class="kb-key-sub">@</span><span class="kb-key-main">2</span></div>
+      <div class="kb-key" data-code="Digit3" data-finger="l-mid"><span class="kb-key-sub">#</span><span class="kb-key-main">3</span></div>
+      <div class="kb-key" data-code="Digit4" data-finger="l-index"><span class="kb-key-sub">$</span><span class="kb-key-main">4</span></div>
+      <div class="kb-key" data-code="Digit5" data-finger="l-index"><span class="kb-key-sub">%</span><span class="kb-key-main">5</span></div>
+      <div class="kb-key" data-code="Digit6" data-finger="r-index"><span class="kb-key-sub">^</span><span class="kb-key-main">6</span></div>
+      <div class="kb-key" data-code="Digit7" data-finger="r-index"><span class="kb-key-sub">&</span><span class="kb-key-main">7</span></div>
+      <div class="kb-key" data-code="Digit8" data-finger="r-mid"><span class="kb-key-sub">*</span><span class="kb-key-main">8</span></div>
+      <div class="kb-key" data-code="Digit9" data-finger="r-ring"><span class="kb-key-sub">(</span><span class="kb-key-main">9</span></div>
+      <div class="kb-key" data-code="Digit0" data-finger="r-pinky"><span class="kb-key-sub">)</span><span class="kb-key-main">0</span></div>
+      <div class="kb-key" data-code="Minus" data-finger="r-pinky"><span class="kb-key-sub">_</span><span class="kb-key-main">-</span></div>
+      <div class="kb-key" data-code="Equal" data-finger="r-pinky"><span class="kb-key-sub">+</span><span class="kb-key-main">=</span></div>
+      <div class="kb-key key-backspace" data-code="Backspace" data-finger="r-pinky"><span class="kb-key-main">Backspace</span></div>
+    </div>
+
+    <!-- Row 2: Top QWERTY Row -->
+    <div class="kb-row">
+      <div class="kb-key key-tab" data-code="Tab" data-finger="l-pinky"><span class="kb-key-main">Tab</span></div>
+      <div class="kb-key" data-code="KeyQ" data-finger="l-pinky"><span class="kb-key-main">Q</span></div>
+      <div class="kb-key" data-code="KeyW" data-finger="l-ring"><span class="kb-key-main">W</span></div>
+      <div class="kb-key" data-code="KeyE" data-finger="l-mid"><span class="kb-key-main">E</span></div>
+      <div class="kb-key" data-code="KeyR" data-finger="l-index"><span class="kb-key-main">R</span></div>
+      <div class="kb-key" data-code="KeyT" data-finger="l-index"><span class="kb-key-main">T</span></div>
+      <div class="kb-key" data-code="KeyY" data-finger="r-index"><span class="kb-key-main">Y</span></div>
+      <div class="kb-key" data-code="KeyU" data-finger="r-index"><span class="kb-key-main">U</span></div>
+      <div class="kb-key" data-code="KeyI" data-finger="r-mid"><span class="kb-key-main">I</span></div>
+      <div class="kb-key" data-code="KeyO" data-finger="r-ring"><span class="kb-key-main">O</span></div>
+      <div class="kb-key" data-code="KeyP" data-finger="r-pinky"><span class="kb-key-main">P</span></div>
+      <div class="kb-key" data-code="BracketLeft" data-finger="r-pinky"><span class="kb-key-sub">{</span><span class="kb-key-main">[</span></div>
+      <div class="kb-key" data-code="BracketRight" data-finger="r-pinky"><span class="kb-key-sub">}</span><span class="kb-key-main">]</span></div>
+      <div class="kb-key" data-code="Backslash" data-finger="r-pinky"><span class="kb-key-sub">|</span><span class="kb-key-main">\</span></div>
+    </div>
+
+    <!-- Row 3: Home Row (F and J bumps!) -->
+    <div class="kb-row">
+      <div class="kb-key key-caps" data-code="CapsLock" data-finger="l-pinky"><span class="kb-key-main">Caps</span></div>
+      <div class="kb-key" data-code="KeyA" data-finger="l-pinky"><span class="kb-key-main">A</span></div>
+      <div class="kb-key" data-code="KeyS" data-finger="l-ring"><span class="kb-key-main">S</span></div>
+      <div class="kb-key" data-code="KeyD" data-finger="l-mid"><span class="kb-key-main">D</span></div>
+      <div class="kb-key" data-code="KeyF" data-finger="l-index"><span class="kb-key-main">F</span><span style="font-size:0.6rem; color:var(--accent);">_</span></div>
+      <div class="kb-key" data-code="KeyG" data-finger="l-index"><span class="kb-key-main">G</span></div>
+      <div class="kb-key" data-code="KeyH" data-finger="r-index"><span class="kb-key-main">H</span></div>
+      <div class="kb-key" data-code="KeyJ" data-finger="r-index"><span class="kb-key-main">J</span><span style="font-size:0.6rem; color:var(--accent);">_</span></div>
+      <div class="kb-key" data-code="KeyK" data-finger="r-mid"><span class="kb-key-main">K</span></div>
+      <div class="kb-key" data-code="KeyL" data-finger="r-ring"><span class="kb-key-main">L</span></div>
+      <div class="kb-key" data-code="Semicolon" data-finger="r-pinky"><span class="kb-key-sub">:</span><span class="kb-key-main">;</span></div>
+      <div class="kb-key" data-code="Quote" data-finger="r-pinky"><span class="kb-key-sub">"</span><span class="kb-key-main">'</span></div>
+      <div class="kb-key key-enter" data-code="Enter" data-finger="r-pinky"><span class="kb-key-main">Enter</span></div>
+    </div>
+
+    <!-- Row 4: Bottom Row -->
+    <div class="kb-row">
+      <div class="kb-key key-lshift" data-code="ShiftLeft" data-finger="l-pinky"><span class="kb-key-main">Shift</span></div>
+      <div class="kb-key" data-code="KeyZ" data-finger="l-pinky"><span class="kb-key-main">Z</span></div>
+      <div class="kb-key" data-code="KeyX" data-finger="l-ring"><span class="kb-key-main">X</span></div>
+      <div class="kb-key" data-code="KeyC" data-finger="l-mid"><span class="kb-key-main">C</span></div>
+      <div class="kb-key" data-code="KeyV" data-finger="l-index"><span class="kb-key-main">V</span></div>
+      <div class="kb-key" data-code="KeyB" data-finger="l-index"><span class="kb-key-main">B</span></div>
+      <div class="kb-key" data-code="KeyN" data-finger="r-index"><span class="kb-key-main">N</span></div>
+      <div class="kb-key" data-code="KeyM" data-finger="r-index"><span class="kb-key-main">M</span></div>
+      <div class="kb-key" data-code="Comma" data-finger="r-mid"><span class="kb-key-sub">&lt;</span><span class="kb-key-main">,</span></div>
+      <div class="kb-key" data-code="Period" data-finger="r-ring"><span class="kb-key-sub">&gt;</span><span class="kb-key-main">.</span></div>
+      <div class="kb-key" data-code="Slash" data-finger="r-pinky"><span class="kb-key-sub">?</span><span class="kb-key-main">/</span></div>
+      <div class="kb-key key-rshift" data-code="ShiftRight" data-finger="r-pinky"><span class="kb-key-main">Shift</span></div>
+    </div>
+
+    <!-- Row 5: Space Bar Row -->
+    <div class="kb-row">
+      <div class="kb-key key-ctrl" data-code="ControlLeft" data-finger="l-pinky"><span class="kb-key-main">Ctrl</span></div>
+      <div class="kb-key key-alt" data-code="AltLeft" data-finger="thumb"><span class="kb-key-main">Alt</span></div>
+      <div class="kb-key key-space" data-code="Space" data-finger="thumb"><span class="kb-key-main">Space</span></div>
+      <div class="kb-key key-alt" data-code="AltRight" data-finger="thumb"><span class="kb-key-main">Alt</span></div>
+      <div class="kb-key key-ctrl" data-code="ControlRight" data-finger="r-pinky"><span class="kb-key-main">Ctrl</span></div>
+    </div>
+  </div>
+
+  <!-- Navigation Prev/Next Shortcuts -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+    {% if prev_lesson %}
+      <a href="{% url 'lesson_view' prev_lesson.lesson_number %}" class="btn btn-secondary btn-sm">
+        ← Previous (Lesson {{ prev_lesson.lesson_number }})
+      </a>
+    {% else %}
+      <div></div>
+    {% endif %}
+
+    <a href="{% url 'course_map' %}" class="btn btn-secondary btn-sm">
+      📋 Course Map
+    </a>
+
+    {% if next_lesson %}
+      <a href="{% url 'lesson_view' next_lesson.lesson_number %}" class="btn btn-secondary btn-sm">
+        Next (Lesson {{ next_lesson.lesson_number }}) →
+      </a>
+    {% else %}
+      <div></div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Completion Results Modal -->
+<div class="modal-backdrop" id="result-modal-backdrop">
+  <div class="result-card">
+    <div class="result-header">
+      <h3 id="modal-title">Lesson Completed!</h3>
+      <p id="modal-subtitle">Great touch-typing cadence.</p>
+    </div>
+
+    <!-- Stars Row -->
+    <div class="stars-row" id="modal-stars-container">
+      <!-- Stars injected dynamically -->
+    </div>
+
+    <!-- Metrics Matrix -->
+    <div class="result-stats-matrix">
+      <div class="stat-box">
+        <span class="val" id="modal-wpm">0</span>
+        <span class="lbl">WPM Speed</span>
+      </div>
+      <div class="stat-box">
+        <span class="val" id="modal-acc">0%</span>
+        <span class="lbl">Accuracy</span>
+      </div>
+      <div class="stat-box">
+        <span class="val" id="modal-err">0</span>
+        <span class="lbl">Errors</span>
+      </div>
+    </div>
+
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+      Time elapsed: <strong id="modal-time" style="color: var(--text-main);">0s</strong>
+    </div>
+
+    <!-- XP Gained Banner -->
+    <div class="xp-award-banner" id="modal-xp-banner" style="display: none;">
+      <span>⚡</span><span id="modal-xp-text">+50 XP Earned!</span>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="result-actions">
+      <button class="btn btn-secondary" id="modal-btn-retry">🔄 Retry Lesson</button>
+      <a href="{% url 'course_map' %}" class="btn btn-secondary">📋 Course Map</a>
+      <a href="#" class="btn btn-primary" id="modal-btn-next">Next Lesson →</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/keyboard.js' %}"></script>
+<script src="{% static 'js/typing-engine.js' %}"></script>
+<script src="{% static 'js/lesson-view.js' %}"></script>
+{% endblock %}

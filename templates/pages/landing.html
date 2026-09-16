@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}TypeForge — Master Touch Typing with Speed & Accuracy{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-badge">
+      <span>🚀 Powered by Real-Time Typing Engine</span>
+    </div>
+
+    <h1 class="hero-title">
+      Learn touch typing the <span class="hero-highlight">right way</span> from scratch.
+    </h1>
+
+    <p class="hero-subtitle">
+      Master muscle memory, stop hunting and pecking, and build effortless typing velocity with structured interactive lessons, real-time finger guidance, and targeted drills.
+    </p>
+
+    <div class="hero-actions">
+      <a href="{% url 'signup' %}" class="btn btn-primary btn-lg">Start Learning Free</a>
+      <a href="{% url 'typing_test' %}" class="btn btn-secondary btn-lg">Take a Typing Test (60s)</a>
+    </div>
+
+    <!-- Live Animated Visual Simulation -->
+    <div class="hero-preview-container">
+      <div class="preview-screen">
+        <span class="typed-correct">the quick brown fox </span><span class="typed-current">j</span><span class="typed-pending">umps over a lazy dog while developing precision typing.</span>
+      </div>
+      <div class="preview-metrics">
+        <div class="metric-item">
+          <div class="metric-value" style="color: #60a5fa;">72 WPM</div>
+          <div class="metric-label">Current Speed</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value" style="color: #34d399;">98.5%</div>
+          <div class="metric-label">Accuracy</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value" style="color: #fbbf24;">Level 8</div>
+          <div class="metric-label">Home Row Master</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-value" style="color: #a855f7;">54 Lessons</div>
+          <div class="metric-label">Curriculum Depth</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Grid -->
+<section class="features-section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Core Advantages</span>
+      <h2 class="section-title">Built for Serious Typists</h2>
+      <p class="section-desc">Designed with proven cognitive learning principles to build permanent touch-typing muscle memory.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">🖐️</div>
+        <h3>Interactive Finger Guidance</h3>
+        <p>Our real-time virtual keyboard and color-coded hand guide visually instruct you which finger to use for every single key.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">⚡</div>
+        <h3>Zero-Lag Typing Engine</h3>
+        <p>Calculates WPM, raw speed, accuracy, and key mistakes on the fly with instantaneous visual and sound feedback.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">🎯</div>
+        <h3>Weak Key Diagnostics</h3>
+        <p>TypeForge identifies which keys you struggle with and automatically suggests customized exercises to eliminate weak spots.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">🎮</div>
+        <h3>Engaging Typing Games</h3>
+        <p>Break up intensive drills with interactive games like Falling Words, Word Sprint, and the zero-mistake Accuracy Challenge.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">🏆</div>
+        <h3>Gamified Mastery</h3>
+        <p>Earn XP, level up, collect badges, maintain daily streaks, and watch your speed curve rise over time.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon-wrapper">📊</div>
+        <h3>In-Depth Analytics</h3>
+        <p>Detailed performance charts track your WPM growth, consistency, total practice minutes, and character volume over time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works-section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Methodology</span>
+      <h2 class="section-title">How TypeForge Transforms Your Typing</h2>
+      <p class="section-desc">A step-by-step learning progression that transitions your habits from looking at keys to pure muscle reflex.</p>
+    </div>
+
+    <div class="steps-container">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <h4>Learn</h4>
+        <p>Anchor your hands on the F and J bumps. Learn correct finger-to-key pathways without looking down at the keyboard.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">02</div>
+        <h4>Practice</h4>
+        <p>Progress through 13 structured levels from home row basics to full alphabet, numbers, symbols, and literary prose.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <h4>Improve</h4>
+        <p>Review mistake analysis, target problematic keys, and build a consistent rhythmic cadence with instant auditory feedback.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">04</div>
+        <h4>Master</h4>
+        <p>Graduate from the course with 60–100+ WPM typing speed, effortlessly writing code, papers, and communications in flow state.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Community Testimonials (Original Content) -->
+<section class="testimonials-section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Success Stories</span>
+      <h2 class="section-title">Trusted by Students &amp; Professionals</h2>
+      <p class="section-desc">Real transformations achieved through deliberate touch typing practice.</p>
+    </div>
+
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <p class="testimonial-quote">
+          "I used to hunt and peck at around 28 WPM with two fingers. After completing the first 20 lessons on TypeForge, I broke 65 WPM without ever having to look at my keyboard. It revolutionized my daily work."
+        </p>
+        <div class="testimonial-author">
+          <div class="author-avatar">AR</div>
+          <div class="author-info">
+            <h5>Ananya Roy</h5>
+            <span>Computer Science Student</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <p class="testimonial-quote">
+          "The interactive finger guide and weak-key drills are fantastic. Other typing sites just give you walls of text, but TypeForge systematically fixes the exact fingers you struggle with."
+        </p>
+        <div class="testimonial-author">
+          <div class="author-avatar" style="background: linear-gradient(135deg, #10b981, #06b6d4);">MK</div>
+          <div class="author-info">
+            <h5>Marcus Keller</h5>
+            <span>Software Engineer</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card">
+        <p class="testimonial-quote">
+          "The typing games kept my focus high every evening. Going from 40 WPM to 90 WPM shaved hours off my article writing and drafting sessions."
+        </p>
+        <div class="testimonial-author">
+          <div class="author-avatar" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">SP</div>
+          <div class="author-info">
+            <h5>Sarah Jenkins</h5>
+            <span>Content Strategist</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-box">
+      <h2>Ready to Double Your Typing Speed?</h2>
+      <p>Join thousands of learners mastering touch typing step-by-step. Completely free to start, right in your browser.</p>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="{% url 'signup' %}" class="btn btn-primary btn-lg">Create Free Account</a>
+        <a href="{% url 'course_map' %}" class="btn btn-secondary btn-lg">Explore Course Map</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

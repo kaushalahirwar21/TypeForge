@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard — TypeForge{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container dashboard-layout">
+
+  <!-- Welcome & Level Status Banner -->
+  <div class="welcome-banner">
+    <div class="welcome-info">
+      <h1>Welcome back, {{ user.first_name|default:user.username }}!</h1>
+      <p>Keep your fingers rested on the home row and maintain your rhythm today.</p>
+    </div>
+
+    <div class="level-progress-box">
+      <div class="level-meta">
+        <span class="level-badge">⭐ Level {{ profile.level }}</span>
+        <span class="xp-total">{{ profile.xp }} Total XP</span>
+      </div>
+      <div class="progress-track" title="{{ profile.xp_current_level_progress }}% towards Level {{ profile.level|add:1 }}">
+        <div class="progress-fill" style="width: {{ profile.xp_current_level_progress }}%;"></div>
+      </div>
+      <div style="font-size: 0.75rem; color: var(--text-subtle); margin-top: 0.35rem; text-align: right;">
+        {{ profile.xp_current_level_progress }}% to Level {{ profile.level|add:1 }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Continue Learning Spotlight Card -->
+  <div class="spotlight-card">
+    <div class="spotlight-content">
+      <div class="spotlight-label">Current Curriculum Progress — {{ progress_percentage }}% Completed</div>
+      <div class="progress-track" style="height: 6px; margin-bottom: 0.75rem; max-width: 480px;">
+        <div class="progress-fill" style="width: {{ progress_percentage }}%;"></div>
+      </div>
+      {% if current_lesson %}
+        <div class="spotlight-title">{{ current_lesson.level_title }} — Lesson {{ current_lesson.lesson_number }}</div>
+        <div style="font-size: 1.1rem; font-weight: 600; color: var(--accent); margin-bottom: 0.4rem;">
+          {{ current_lesson.title }}
+        </div>
+        <div class="spotlight-desc">{{ current_lesson.learning_objective }}</div>
+      {% else %}
+        <div class="spotlight-title">Touch Typing Mastery</div>
+        <div class="spotlight-desc">All lessons unlocked! Review and refine your speed.</div>
+      {% endif %}
+    </div>
+    <div>
+      {% if current_lesson %}
+        <a href="{% url 'lesson_view' current_lesson.lesson_number %}" class="btn btn-primary btn-lg" style="white-space: nowrap;">
+          Continue Learning →
+        </a>
+      {% else %}
+        <a href="{% url 'course_map' %}" class="btn btn-primary btn-lg">Explore Lessons</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 4-Stat Core Metrics Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-speed">⚡</div>
+      <div class="stat-meta">
+        <span class="stat-number">{{ best_wpm }}</span>
+        <span class="stat-title">Best WPM (Avg {{ avg_wpm }})</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon icon-accuracy">🎯</div>
+      <div class="stat-meta">
+        <span class="stat-number">{{ avg_accuracy }}%</span>
+        <span class="stat-title">Average Accuracy</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon icon-lessons">📚</div>
+      <div class="stat-meta">
+        <span class="stat-number">{{ completed_count }} / {{ total_lessons_count }}</span>
+        <span class="stat-title">Lessons Completed</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon icon-time">⏱️</div>
+      <div class="stat-meta">
+        <span class="stat-number">
+          {% if practice_minutes < 60 %}
+            {{ practice_minutes }}m
+          {% else %}
+            {{ practice_hours }}h
+          {% endif %}
+        </span>
+        <span class="stat-title">Total Practice Time</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed 2-Column Section -->
+  <div class="dashboard-grid-2col">
+    <!-- Left Column: Weak Keys & Recent Activity -->
+    <div style="display: flex; flex-direction: column; gap: 1.75rem;">
+      <!-- Weak Keys Analysis -->
+      <div class="weak-keys-card">
+        <div class="weak-keys-header">
+          <h3>Weak Keys Diagnostic</h3>
+          <span class="badge badge-warning">Auto-Detected</span>
+        </div>
+
+        {% if weak_keys %}
+          <div class="weak-keys-list">
+            {% for item in weak_keys %}
+              <div class="weak-key-item">
+                <span class="key-char">{{ item.key|upper }}</span>
+                <span class="key-misses">{{ item.count }} misses</span>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="weak-key-recommendation">
+            <span style="font-size: 1.25rem;">💡</span>
+            <span>
+              <strong>Recommendation:</strong> Spend 5 minutes practicing keys 
+              <strong>{% for item in weak_keys|slice:":3" %}{{ item.key|upper }}{% if not forloop.last %}, {% endif %}{% endfor %}</strong>
+              to smooth out typing cadence and increase overall velocity.
+            </span>
+          </div>
+        {% else %}
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">
+            No significant weak keys detected yet! Complete more lessons and tests to generate a personalized error diagnostic.
+          </p>
+        {% endif %}
+      </div>
+
+      <!-- Recent Sessions Activity Table -->
+      <div class="activity-card">
+        <div class="activity-header">
+          <h3>Recent Practice Activity</h3>
+          <a href="{% url 'statistics' %}" style="font-size: 0.85rem; font-weight: 600;">Full Analytics →</a>
+        </div>
+
+        {% if recent_sessions %}
+          <div style="overflow-x: auto;">
+            <table class="activity-table">
+              <thead>
+                <tr>
+                  <th>Session</th>
+                  <th>Speed</th>
+                  <th>Accuracy</th>
+                  <th>Mistakes</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for session in recent_sessions %}
+                  <tr>
+                    <td>
+                      {% if session.lesson %}
+                        <strong>L{{ session.lesson.lesson_number }}</strong>: {{ session.lesson.title }}
+                      {% else %}
+                        {{ session.get_session_type_display }}
+                      {% endif %}
+                    </td>
+                    <td><strong style="color: #60a5fa;">{{ session.wpm|floatformat:1 }}</strong> WPM</td>
+                    <td><span style="color: #34d399;">{{ session.accuracy|floatformat:1 }}%</span></td>
+                    <td>{{ session.mistakes_count }}</td>
+                    <td style="color: var(--text-muted);">{{ session.created_at|timesince }} ago</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+            No typing sessions recorded yet. Launch your first lesson to see live telemetry!
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right Column: Streak & Badges -->
+    <div class="side-stack">
+      <!-- Streak Widget -->
+      <div class="streak-card">
+        <div class="streak-flame">🔥</div>
+        <div class="streak-count">{{ profile.current_streak }}</div>
+        <div class="streak-label">Day Active Streak</div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+          Best streak: <strong>{{ profile.best_streak }} days</strong>. Practice at least one lesson each day to keep your flame blazing!
+        </p>
+      </div>
+
+      <!-- Recent Achievements Widget -->
+      <div class="achievements-preview-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="font-size: 1.1rem; color: var(--text-main); font-weight: 700;">Unlocked Badges</h3>
+          <a href="{% url 'achievements' %}" style="font-size: 0.85rem; font-weight: 600;">View All →</a>
+        </div>
+
+        {% if recent_achievements %}
+          <div>
+            {% for item in recent_achievements %}
+              <div class="badge-item-mini">
+                <div class="badge-mini-icon">🏆</div>
+                <div class="badge-mini-info">
+                  <h5>{{ item.achievement.title }}</h5>
+                  <span>+{{ item.achievement.xp_reward }} XP • {{ item.unlocked_at|timesince }} ago</span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div style="text-align: center; padding: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem;">
+            Complete your first lesson to unlock your first achievement badge!
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

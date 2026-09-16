@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Performance Statistics — TypeForge{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem 5rem 1.5rem; display: flex; flex-direction: column; gap: 2rem;">
+
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h1 style="font-size: 2rem; font-weight: 800; color: #ffffff; margin-bottom: 0.25rem;">Typing Performance Analytics</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">Review your typing speed trajectory, precision consistency, and key mistake telemetry.</p>
+    </div>
+    <a href="{% url 'typing_test' %}" class="btn btn-primary">Take a Speed Test →</a>
+  </div>
+
+  <!-- 4 Core Lifetime Metric Cards -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem;">
+    <div class="card" style="padding: 1.5rem;">
+      <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem;">Best Speed</div>
+      <div style="font-size: 2rem; font-weight: 900; color: #60a5fa; font-family: var(--font-mono);">{{ best_wpm }} WPM</div>
+      <div style="font-size: 0.8rem; color: var(--text-subtle); margin-top: 0.25rem;">Lifetime Peak Velocity</div>
+    </div>
+
+    <div class="card" style="padding: 1.5rem;">
+      <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem;">Average Speed</div>
+      <div style="font-size: 2rem; font-weight: 900; color: var(--accent); font-family: var(--font-mono);">{{ avg_wpm }} WPM</div>
+      <div style="font-size: 0.8rem; color: var(--text-subtle); margin-top: 0.25rem;">Across all recent sessions</div>
+    </div>
+
+    <div class="card" style="padding: 1.5rem;">
+      <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem;">Mean Accuracy</div>
+      <div style="font-size: 2rem; font-weight: 900; color: #34d399; font-family: var(--font-mono);">{{ avg_accuracy }}%</div>
+      <div style="font-size: 0.8rem; color: var(--text-subtle); margin-top: 0.25rem;">Strike precision rate</div>
+    </div>
+
+    <div class="card" style="padding: 1.5rem;">
+      <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem;">Total Volume</div>
+      <div style="font-size: 2rem; font-weight: 900; color: #fbbf24; font-family: var(--font-mono);">{{ total_characters }}</div>
+      <div style="font-size: 0.8rem; color: var(--text-subtle); margin-top: 0.25rem;">Keystrokes typed ({{ total_time_minutes }} mins)</div>
+    </div>
+  </div>
+
+  <!-- Performance Charts -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem;">
+    <!-- WPM Trajectory Chart -->
+    <div class="card" style="padding: 1.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin: 0;">Speed Trend (WPM)</h3>
+        <span class="badge badge-primary">Last 20 Sessions</span>
+      </div>
+      <div id="wpm-chart-container" style="width: 100%; height: 230px;">
+        <!-- Injected via charts.js -->
+      </div>
+    </div>
+
+    <!-- Accuracy Trajectory Chart -->
+    <div class="card" style="padding: 1.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin: 0;">Accuracy Trend (%)</h3>
+        <span class="badge badge-success">Target: 95%+</span>
+      </div>
+      <div id="accuracy-chart-container" style="width: 100%; height: 230px;">
+        <!-- Injected via charts.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- In-Depth Weak Key Diagnostic & Targeted Drills -->
+  <div class="card" style="padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin-bottom: 0.25rem;">Weak Keys Diagnostic Matrix</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Keys with highest error frequencies identified across your recent typing history.</p>
+      </div>
+      <span class="badge badge-warning">Precision Analysis</span>
+    </div>
+
+    {% if weak_keys %}
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
+        {% for key, count in weak_keys %}
+          <div style="background-color: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+            <div style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 900; color: var(--danger);">{{ key|upper }}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">{{ count }} Mistakes</div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-md); padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h4 style="font-size: 1rem; color: #ffffff; margin-bottom: 0.25rem;">Personalized Weak Key Practice Routine</h4>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+            Targeted drill focusing on your most missed keys: 
+            <strong>{% for key, count in weak_keys|slice:":4" %}{{ key|upper }}{% if not forloop.last %}, {% endif %}{% endfor %}</strong>.
+          </p>
+        </div>
+        <a href="{% url 'lesson_view' 52 %}" class="btn btn-primary btn-sm">Start Precision Drills →</a>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 2.5rem 0; color: var(--text-muted);">
+        No significant character mistakes detected yet! Complete more lessons and tests to populate the heatmap.
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/charts.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const labels = {{ labels_json|safe }};
+    const wpmData = {{ wpm_data_json|safe }};
+    const accuracyData = {{ accuracy_data_json|safe }};
+
+    // Render WPM chart
+    renderSvgLineChart('wpm-chart-container', labels, wpmData, {
+      color: '#3b82f6',
+      fillColor: 'rgba(59, 130, 246, 0.15)',
+      height: 220,
+      min: 0,
+      max: Math.max(60, ...wpmData, 40)
+    });
+
+    // Render Accuracy chart
+    renderSvgLineChart('accuracy-chart-container', labels, accuracyData, {
+      color: '#10b981',
+      fillColor: 'rgba(16, 185, 129, 0.15)',
+      height: 220,
+      min: 70,
+      max: 100
+    });
+  });
+</script>
+{% endblock %}

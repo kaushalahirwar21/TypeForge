@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About TypeForge — Modern Touch Typing Principles{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 3.5rem 1.5rem 5rem 1.5rem; max-width: 900px;">
+  <div style="margin-bottom: 2.5rem; text-align: center;">
+    <span class="badge badge-primary" style="margin-bottom: 0.75rem;">Our Mission</span>
+    <h1 style="font-size: 2.5rem; font-weight: 800; color: #ffffff; margin-bottom: 1rem;">Empowering Global Digital Fluency</h1>
+    <p style="font-size: 1.15rem; color: var(--text-muted); line-height: 1.6;">
+      TypeForge was created to transform how people interact with computers. Typing is the fundamental input channel of modern work, study, and creative expression.
+    </p>
+  </div>
+
+  <div class="card" style="margin-bottom: 2rem;">
+    <h2 style="font-size: 1.4rem; color: var(--text-main); margin-bottom: 1rem;">Why Touch Typing Matters</h2>
+    <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 1rem;">
+      When you hunt and peck, your brain is forced to split attention between your thoughts and the physical keyboard. By committing the QWERTY keyboard layout to muscle memory, typing becomes subconscious—leaving 100% of your cognitive bandwidth free for problem-solving, creative writing, and critical reasoning.
+    </p>
+    <p style="color: var(--text-muted); line-height: 1.7;">
+      An increase in typing speed from 30 WPM to 70 WPM saves the average computer worker over <strong>21 working days per year</strong> in pure input time alone.
+    </p>
+  </div>
+
+  <div class="card" style="margin-bottom: 2rem;">
+    <h2 style="font-size: 1.4rem; color: var(--text-main); margin-bottom: 1rem;">The TypeForge Pedagogical Approach</h2>
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <div style="display: flex; gap: 1rem; align-items: flex-start;">
+        <div style="font-size: 1.5rem; color: var(--primary);">🎯</div>
+        <div>
+          <h4 style="font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.25rem;">Deliberate Practice</h4>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+            We don't just dump random words on your screen. Each of our 13 levels introduces specific finger-key pairs, solidifying spatial relationships before moving up to words, capitalization, numbers, and symbols.
+          </p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 1rem; align-items: flex-start;">
+        <div style="font-size: 1.5rem; color: var(--accent);">⚡</div>
+        <div>
+          <h4 style="font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.25rem;">Instant Multi-Sensory Feedback</h4>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+            Visual colors, live finger tracking diagrams, and subtle synthesized auditory clicks instantly signal correct and incorrect strikes, accelerating neural reinforcement.
+          </p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 1rem; align-items: flex-start;">
+        <div style="font-size: 1.5rem; color: var(--warning);">🧠</div>
+        <div>
+          <h4 style="font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.25rem;">Adaptive Weak-Key Elimination</h4>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+            Our algorithm tracks every character mistake you make and pinpoints the exact keys causing deceleration, producing targeted warmups to turn weaknesses into strengths.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-top: 3rem;">
+    <a href="{% url 'course_map' %}" class="btn btn-primary btn-lg">Begin Your Journey Today</a>
+  </div>
+</div>
+{% endblock %}

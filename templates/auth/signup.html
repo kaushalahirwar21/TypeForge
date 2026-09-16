@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign Up — TypeForge{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 4rem 1.5rem; max-width: 480px;">
+  <div class="card" style="padding: 2.5rem 2rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <img src="{% static 'img/logo.svg' %}" alt="TypeForge" width="48" height="48" style="margin-bottom: 0.75rem;">
+      <h1 style="font-size: 1.75rem; font-weight: 800; color: #ffffff;">Create Your Free Account</h1>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Start your journey to 100+ WPM touch typing.</p>
+    </div>
+
+    <form method="POST" action="{% url 'signup' %}" novalidate>
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.name.id_for_label }}">Full Name</label>
+        {{ form.name }}
+        {% if form.name.errors %}
+          <div class="form-error">{{ form.name.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.email.id_for_label }}">Email Address</label>
+        {{ form.email }}
+        {% if form.email.errors %}
+          <div class="form-error">{{ form.email.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+          <div class="form-error">{{ form.password.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.password_confirm.id_for_label }}">Confirm Password</label>
+        {{ form.password_confirm }}
+        {% if form.password_confirm.errors %}
+          <div class="form-error">{{ form.password_confirm.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem; margin-top: 0.5rem;">
+        Sign Up &amp; Start Learning
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.75rem; font-size: 0.9rem; color: var(--text-muted);">
+      Already have an account? <a href="{% url 'login' %}" style="font-weight: 600;">Log In</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

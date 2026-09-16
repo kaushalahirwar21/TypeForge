@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}TypeForge — Master Touch Typing{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}TypeForge is a modern, interactive touch-typing platform to build professional typing speed, accuracy, and muscle memory.{% endblock %}">
+  
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="{% if user_settings and user_settings.theme == 'light' %}theme-light{% endif %}">
+
+  <!-- Universal Header / Navigation -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'landing' %}{% endif %}" class="brand-link">
+        <img src="{% static 'img/logo.svg' %}" alt="TypeForge Logo" width="34" height="34" style="vertical-align: middle;">
+        <span>TypeForge</span>
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <nav>
+        <ul class="nav-links" id="main-nav-links">
+          {% if user.is_authenticated %}
+            <li class="nav-item"><a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+            <li class="nav-item"><a href="{% url 'course_map' %}" class="{% if request.resolver_match.url_name == 'course_map' or request.resolver_match.url_name == 'lesson_view' %}active{% endif %}">Lessons</a></li>
+            <li class="nav-item"><a href="{% url 'typing_test' %}" class="{% if request.resolver_match.url_name == 'typing_test' %}active{% endif %}">Typing Test</a></li>
+            <li class="nav-item"><a href="{% url 'games' %}" class="{% if request.resolver_match.url_name == 'games' %}active{% endif %}">Games</a></li>
+            <li class="nav-item"><a href="{% url 'achievements' %}" class="{% if request.resolver_match.url_name == 'achievements' %}active{% endif %}">Achievements</a></li>
+            <li class="nav-item"><a href="{% url 'statistics' %}" class="{% if request.resolver_match.url_name == 'statistics' %}active{% endif %}">Statistics</a></li>
+          {% else %}
+            <li class="nav-item"><a href="{% url 'course_map' %}" class="{% if request.resolver_match.url_name == 'course_map' %}active{% endif %}">Lessons</a></li>
+            <li class="nav-item"><a href="{% url 'typing_test' %}" class="{% if request.resolver_match.url_name == 'typing_test' %}active{% endif %}">Typing Test</a></li>
+            <li class="nav-item"><a href="{% url 'games' %}" class="{% if request.resolver_match.url_name == 'games' %}active{% endif %}">Games</a></li>
+            <li class="nav-item"><a href="{% url 'about' %}" class="{% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a></li>
+            <li class="nav-item"><a href="{% url 'help' %}" class="{% if request.resolver_match.url_name == 'help' %}active{% endif %}">Help & FAQ</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      <!-- Auth Controls / User Profile -->
+      <div class="nav-auth">
+        {% if user.is_authenticated %}
+          <div class="user-status-pill">
+            <span class="streak-pill" title="Daily Practice Streak">🔥 {{ user_profile.current_streak }}d</span>
+            <span class="level-pill" title="Current Level">Lvl {{ user_profile.level }}</span>
+            <a href="{% url 'profile' %}" class="user-avatar-mini" title="Your Profile" style="background-color: {{ user_profile.avatar_color }};">
+              {{ user.first_name|default:user.username|slice:":1"|upper }}
+            </a>
+          </div>
+          <a href="{% url 'settings' %}" class="btn btn-secondary btn-sm" title="Settings">⚙️</a>
+          <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm" title="Log Out">Log Out</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="btn btn-secondary btn-sm">Log In</a>
+          <a href="{% url 'signup' %}" class="btn btn-primary btn-sm">Sign Up Free</a>
+        {% endif %}
+
+        <button class="mobile-nav-toggle" id="mobile-toggle" aria-label="Toggle Navigation">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Messages & Toasts -->
+  <div class="container">
+    {% if messages %}
+      <div class="alert-container">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'info' }}">
+            <span>{{ message }}</span>
+            <button class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Page Content -->
+  <main style="flex: 1;">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Universal Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <img src="{% static 'img/logo.svg' %}" alt="TypeForge" width="28" height="28">
+            <h3 style="margin: 0; color: #ffffff;">TypeForge</h3>
+          </div>
+          <p>An educational touch-typing learning platform designed to take beginners from basic home row orientation to lightning-fast, highly accurate 100+ WPM typing.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Curriculum</h4>
+          <ul class="footer-links">
+            <li><a href="{% url 'course_map' %}">Course Map</a></li>
+            <li><a href="{% url 'lesson_view' 1 %}">Level 1: Getting Started</a></li>
+            <li><a href="{% url 'lesson_view' 5 %}">Level 2: Home Row</a></li>
+            <li><a href="{% url 'lesson_view' 11 %}">Level 3: Top Row</a></li>
+            <li><a href="{% url 'lesson_view' 17 %}">Level 4: Bottom Row</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Tools & Practice</h4>
+          <ul class="footer-links">
+            <li><a href="{% url 'typing_test' %}">Speed Test (30s / 60s)</a></li>
+            <li><a href="{% url 'games' %}">Typing Games Suite</a></li>
+            <li><a href="{% url 'achievements' %}">Achievements & XP</a></li>
+            <li><a href="{% url 'statistics' %}">Performance Analytics</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Platform</h4>
+          <ul class="footer-links">
+            <li><a href="{% url 'about' %}">About Methodology</a></li>
+            <li><a href="{% url 'help' %}">Hand Placement Guide</a></li>
+            <li><a href="{% url 'help' %}">Help & FAQ</a></li>
+            {% if user.is_staff %}
+              <li><a href="/admin/">Django Admin</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; {% now "Y" %} TypeForge. All rights reserved. Built with precision for touch typing learners worldwide.</span>
+        <span>Original curriculum &amp; interactive typing engine</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/sound.js' %}"></script>
+  <script>
+    // Mobile navigation toggler
+    const toggle = document.getElementById('mobile-toggle');
+    const nav = document.getElementById('main-nav-links');
+    if (toggle && nav) {
+      toggle.addEventListener('click', () => {
+        nav.classList.toggle('show-mobile');
+      });
+    }
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="tf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <linearGradient id="spark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#ef4444" />
+    </linearGradient>
+  </defs>
+  <!-- Base Keyboard Keycap -->
+  <rect x="4" y="6" width="40" height="36" rx="8" fill="url(#tf-grad)" />
+  <rect x="7" y="9" width="34" height="30" rx="6" fill="#111827" fill-opacity="0.85" />
+  
+  <!-- Stylized T & Anvil / Forge Shape -->
+  <path d="M16 16 H32 V21 H26.5 V33 H21.5 V21 H16 Z" fill="#ffffff" />
+  <!-- Spark Element -->
+  <circle cx="34" cy="14" r="3" fill="url(#spark-grad)" />
+</svg>

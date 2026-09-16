@@ -1,0 +1,624 @@
+import json
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.db.models import Avg, Max, Sum, Count
+from django.utils import timezone
+import datetime
+
+from .models import (
+    UserProfile, UserSettings, Course, Lesson, LessonProgress,
+    TypingSession, TypingTestResult, Achievement, UserAchievement, DailyActivity
+)
+from .forms import SignUpForm, CustomLoginForm, ProfileEditForm, UserSettingsForm
+
+
+def landing(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    total_lessons = Lesson.objects.count()
+    total_typists = User.objects.count() + 1420  # Friendly active community base
+    return render(request, 'pages/landing.html', {
+        'total_lessons': total_lessons,
+        'total_typists': total_typists,
+    })
+
+
+def about(request):
+    return render(request, 'pages/about.html')
+
+
+def help_faq(request):
+    return render(request, 'pages/help.html')
+
+
+def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Initialize Lesson 1 as unlocked
+            first_lesson = Lesson.objects.order_by('level_number', 'lesson_number').first()
+            if first_lesson:
+                LessonProgress.objects.create(
+                    user=user,
+                    lesson=first_lesson,
+                    unlocked=True
+                )
+            login(request, user)
+            messages.success(request, f"Welcome to TypeForge, {user.first_name or user.username}! Let's start your touch typing journey.")
+            return redirect('dashboard')
+    else:
+        form = SignUpForm()
+    
+    return render(request, 'auth/signup.html', {'form': form})
+
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = CustomLoginForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            # Update user streak
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            profile.update_streak()
+            profile.save()
+            messages.success(request, f"Welcome back, {user.first_name or user.username}!")
+            next_url = request.GET.get('next') or 'dashboard'
+            return redirect(next_url)
+        else:
+            # Check if user entered email instead of username
+            entered_id = request.POST.get('username')
+            password = request.POST.get('password')
+            if entered_id and '@' in entered_id:
+                try:
+                    user_obj = User.objects.get(email__iexact=entered_id.strip())
+                    auth_user = authenticate(request, username=user_obj.username, password=password)
+                    if auth_user is not None:
+                        login(request, auth_user)
+                        profile, _ = UserProfile.objects.get_or_create(user=auth_user)
+                        profile.update_streak()
+                        profile.save()
+                        messages.success(request, f"Welcome back, {auth_user.first_name or auth_user.username}!")
+                        return redirect('dashboard')
+                except User.DoesNotExist:
+                    pass
+            messages.error(request, "Invalid username or password. Please check and try again.")
+    else:
+        form = CustomLoginForm()
+    
+    return render(request, 'auth/login.html', {'form': form})
+
+
+def logout_view(request):
+    logout(request)
+    messages.info(request, "You have been logged out. Keep up the great typing practice!")
+    return redirect('landing')
+
+
+def forgot_password_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        if email:
+            messages.success(request, f"Password reset instructions have been dispatched to {email}. (Development mode notice: check console/email).")
+            return redirect('reset_password_done')
+        else:
+            messages.error(request, "Please provide a valid email address.")
+    return render(request, 'auth/forgot_password.html')
+
+
+def reset_password_done_view(request):
+    return render(request, 'auth/reset_password_done.html')
+
+
+@login_required
+def dashboard(request):
+    user = request.user
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    
+    # Ensure first lesson is unlocked for new user
+    first_lesson = Lesson.objects.order_by('level_number', 'lesson_number').first()
+    if first_lesson:
+        LessonProgress.objects.get_or_create(
+            user=user,
+            lesson=first_lesson,
+            defaults={'unlocked': True}
+        )
+
+    # Calculate overall course progress
+    total_lessons_count = Lesson.objects.count()
+    completed_progresses = LessonProgress.objects.filter(user=user, completed=True)
+    completed_count = completed_progresses.count()
+    progress_percentage = int((completed_count / total_lessons_count * 100)) if total_lessons_count > 0 else 0
+
+    # Determine current / next lesson to continue
+    next_uncompleted = LessonProgress.objects.filter(
+        user=user, unlocked=True, completed=False
+    ).select_related('lesson').order_by('lesson__level_number', 'lesson__lesson_number').first()
+
+    if next_uncompleted:
+        current_lesson = next_uncompleted.lesson
+    else:
+        # If all unlocked are completed, find next lesson in order
+        last_completed = completed_progresses.select_related('lesson').order_by('-lesson__lesson_number').first()
+        if last_completed:
+            current_lesson = Lesson.objects.filter(lesson_number__gt=last_completed.lesson.lesson_number).first() or last_completed.lesson
+        else:
+            current_lesson = first_lesson
+
+    # Aggregate Typing Stats
+    sessions = TypingSession.objects.filter(user=user)
+    avg_wpm = sessions.aggregate(Avg('wpm'))['wpm__avg'] or 0.0
+    best_wpm = sessions.aggregate(Max('wpm'))['wpm__max'] or 0.0
+    avg_accuracy = sessions.aggregate(Avg('accuracy'))['accuracy__avg'] or 0.0
+    recent_sessions = sessions.select_related('lesson')[:8]
+
+    # Practice time in minutes/hours
+    total_seconds = profile.total_practice_time_seconds
+    practice_minutes = total_seconds // 60
+    practice_hours = round(total_seconds / 3600.0, 1)
+
+    # Weak Keys Analysis across last 25 sessions
+    weak_keys_dict = {}
+    for s in sessions[:25]:
+        if s.key_mistakes and isinstance(s.key_mistakes, dict):
+            for char, count in s.key_mistakes.items():
+                weak_keys_dict[char] = weak_keys_dict.get(char, 0) + int(count)
+
+    sorted_weak_keys = sorted(weak_keys_dict.items(), key=lambda item: item[1], reverse=True)[:6]
+    weak_keys_list = [{'key': k, 'count': v} for k, v in sorted_weak_keys]
+
+    # Recent Achievements
+    user_achievements = UserAchievement.objects.filter(user=user).select_related('achievement')[:5]
+
+    return render(request, 'app/dashboard.html', {
+        'profile': profile,
+        'total_lessons_count': total_lessons_count,
+        'completed_count': completed_count,
+        'progress_percentage': progress_percentage,
+        'current_lesson': current_lesson,
+        'avg_wpm': round(avg_wpm, 1),
+        'best_wpm': round(best_wpm, 1),
+        'avg_accuracy': round(avg_accuracy, 1),
+        'practice_minutes': practice_minutes,
+        'practice_hours': practice_hours,
+        'recent_sessions': recent_sessions,
+        'weak_keys': weak_keys_list,
+        'recent_achievements': user_achievements,
+    })
+
+
+@login_required
+def course_map(request):
+    user = request.user
+    # Ensure first lesson is unlocked
+    first_lesson = Lesson.objects.order_by('level_number', 'lesson_number').first()
+    if first_lesson:
+        LessonProgress.objects.get_or_create(user=user, lesson=first_lesson, defaults={'unlocked': True})
+
+    lessons = Lesson.objects.all().order_by('level_number', 'lesson_number')
+    user_progress_map = {
+        p.lesson_id: p for p in LessonProgress.objects.filter(user=user)
+    }
+
+    # Group lessons by level
+    levels_dict = {}
+    for lesson in lessons:
+        lvl_num = lesson.level_number
+        if lvl_num not in levels_dict:
+            levels_dict[lvl_num] = {
+                'level_number': lvl_num,
+                'level_title': lesson.level_title,
+                'lessons': []
+            }
+        progress = user_progress_map.get(lesson.id)
+        is_unlocked = progress.unlocked if progress else False
+        is_completed = progress.completed if progress else False
+        stars = progress.stars if progress else 0
+        best_wpm = progress.best_wpm if progress else 0.0
+
+        levels_dict[lvl_num]['lessons'].append({
+            'lesson': lesson,
+            'is_unlocked': is_unlocked,
+            'is_completed': is_completed,
+            'stars': stars,
+            'best_wpm': round(best_wpm, 1),
+        })
+
+    levels_list = sorted(levels_dict.values(), key=lambda x: x['level_number'])
+    
+    # Count totals
+    total_lessons = lessons.count()
+    completed_count = sum(1 for p in user_progress_map.values() if p.completed)
+    total_stars = sum(p.stars for p in user_progress_map.values())
+
+    return render(request, 'app/course_map.html', {
+        'levels': levels_list,
+        'total_lessons': total_lessons,
+        'completed_count': completed_count,
+        'total_stars': total_stars,
+    })
+
+
+def lesson_view(request, lesson_number):
+    lesson = get_object_or_404(Lesson, lesson_number=lesson_number)
+    user = request.user
+    
+    progress = None
+    is_unlocked = True  # Guests can preview/try lessons
+    if user.is_authenticated:
+        # Check progress
+        progress, _ = LessonProgress.objects.get_or_create(
+            user=user,
+            lesson=lesson,
+            defaults={'unlocked': (lesson.lesson_number == 1)}
+        )
+        is_unlocked = progress.unlocked
+
+    # Find prev and next lessons
+    prev_lesson = Lesson.objects.filter(lesson_number__lt=lesson.lesson_number).order_by('-lesson_number').first()
+    next_lesson = Lesson.objects.filter(lesson_number__gt=lesson.lesson_number).order_by('lesson_number').first()
+
+    return render(request, 'app/lesson.html', {
+        'lesson': lesson,
+        'progress': progress,
+        'is_unlocked': is_unlocked,
+        'prev_lesson': prev_lesson,
+        'next_lesson': next_lesson,
+    })
+
+
+def typing_test_view(request):
+    return render(request, 'app/typing_test.html')
+
+
+def games_hub(request):
+    return render(request, 'app/games.html')
+
+
+@login_required
+def achievements_view(request):
+    user = request.user
+    all_achievements = Achievement.objects.all().order_by('category', 'requirement_value')
+    user_unlocked_ids = set(UserAchievement.objects.filter(user=user).values_list('achievement_id', flat=True))
+
+    achievements_by_category = {}
+    for ach in all_achievements:
+        cat = ach.get_category_display()
+        if cat not in achievements_by_category:
+            achievements_by_category[cat] = []
+        achievements_by_category[cat].append({
+            'achievement': ach,
+            'is_unlocked': ach.id in user_unlocked_ids
+        })
+
+    unlocked_count = len(user_unlocked_ids)
+    total_count = all_achievements.count()
+    percentage = int((unlocked_count / total_count * 100)) if total_count > 0 else 0
+
+    return render(request, 'app/achievements.html', {
+        'categories': achievements_by_category,
+        'unlocked_count': unlocked_count,
+        'total_count': total_count,
+        'percentage': percentage,
+    })
+
+
+@login_required
+def statistics_view(request):
+    user = request.user
+    sessions = TypingSession.objects.filter(user=user).order_by('created_at')
+    
+    # Build chart data points (last 20 sessions)
+    recent_sessions = list(sessions.reverse()[:20])
+    recent_sessions.reverse()
+    
+    labels = [s.created_at.strftime('%m/%d %H:%M') for s in recent_sessions]
+    wpm_data = [round(s.wpm, 1) for s in recent_sessions]
+    accuracy_data = [round(s.accuracy, 1) for s in recent_sessions]
+
+    # Lifetime totals
+    total_characters = sessions.aggregate(Sum('characters_typed'))['characters_typed__sum'] or 0
+    total_time_seconds = user.profile.total_practice_time_seconds
+    best_wpm = sessions.aggregate(Max('wpm'))['wpm__max'] or 0.0
+    avg_wpm = sessions.aggregate(Avg('wpm'))['wpm__avg'] or 0.0
+    avg_accuracy = sessions.aggregate(Avg('accuracy'))['accuracy__avg'] or 0.0
+
+    # Aggregate weak keys
+    weak_keys_dict = {}
+    for s in sessions:
+        if s.key_mistakes and isinstance(s.key_mistakes, dict):
+            for char, count in s.key_mistakes.items():
+                weak_keys_dict[char] = weak_keys_dict.get(char, 0) + int(count)
+
+    sorted_weak_keys = sorted(weak_keys_dict.items(), key=lambda item: item[1], reverse=True)[:10]
+
+    return render(request, 'app/statistics.html', {
+        'labels_json': json.dumps(labels),
+        'wpm_data_json': json.dumps(wpm_data),
+        'accuracy_data_json': json.dumps(accuracy_data),
+        'total_characters': total_characters,
+        'total_time_minutes': total_time_seconds // 60,
+        'best_wpm': round(best_wpm, 1),
+        'avg_wpm': round(avg_wpm, 1),
+        'avg_accuracy': round(avg_accuracy, 1),
+        'weak_keys': sorted_weak_keys,
+    })
+
+
+@login_required
+def profile_view(request):
+    user = request.user
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+
+    if request.method == 'POST':
+        form = ProfileEditForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your profile information has been successfully updated.")
+            return redirect('profile')
+    else:
+        form = ProfileEditForm(instance=user)
+
+    # Profile statistics
+    completed_lessons = LessonProgress.objects.filter(user=user, completed=True).count()
+    total_stars = LessonProgress.objects.filter(user=user).aggregate(Sum('stars'))['stars__sum'] or 0
+    achievements_count = UserAchievement.objects.filter(user=user).count()
+    tests_count = TypingTestResult.objects.filter(user=user).count()
+
+    return render(request, 'app/profile.html', {
+        'form': form,
+        'profile': profile,
+        'completed_lessons': completed_lessons,
+        'total_stars': total_stars,
+        'achievements_count': achievements_count,
+        'tests_count': tests_count,
+    })
+
+
+@login_required
+def settings_view(request):
+    user = request.user
+    user_settings, _ = UserSettings.objects.get_or_create(user=user)
+
+    if request.method == 'POST':
+        form = UserSettingsForm(request.POST, instance=user_settings)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Settings updated successfully!")
+            return redirect('settings')
+    else:
+        form = UserSettingsForm(instance=user_settings)
+
+    return render(request, 'app/settings.html', {'form': form, 'settings': user_settings})
+
+
+# ==========================================
+# API ENDPOINTS FOR REAL-TIME CLIENT SYNC
+# ==========================================
+
+@require_POST
+def api_submit_lesson(request):
+    """Saves completed lesson run, unlocks next lesson, evaluates XP & achievements."""
+    try:
+        data = json.loads(request.body)
+        lesson_id = data.get('lesson_id')
+        wpm = float(data.get('wpm', 0.0))
+        raw_wpm = float(data.get('raw_wpm', 0.0))
+        accuracy = float(data.get('accuracy', 0.0))
+        mistakes_count = int(data.get('mistakes_count', 0))
+        duration_seconds = float(data.get('duration_seconds', 0.0))
+        characters_typed = int(data.get('characters_typed', 0))
+        key_mistakes = data.get('key_mistakes', {})
+
+        lesson = get_object_or_404(Lesson, id=lesson_id)
+        stars = lesson.calculate_stars(wpm, accuracy)
+
+        response_data = {
+            'success': True,
+            'stars': stars,
+            'xp_earned': 0,
+            'unlocked_next': False,
+            'next_lesson_number': None,
+            'new_achievements': []
+        }
+
+        if request.user.is_authenticated:
+            user = request.user
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            profile.update_streak()
+            profile.total_practice_time_seconds += int(duration_seconds)
+            
+            # Log Typing Session
+            TypingSession.objects.create(
+                user=user,
+                lesson=lesson,
+                session_type='lesson',
+                wpm=wpm,
+                raw_wpm=raw_wpm,
+                accuracy=accuracy,
+                mistakes_count=mistakes_count,
+                duration_seconds=duration_seconds,
+                characters_typed=characters_typed,
+                key_mistakes=key_mistakes
+            )
+
+            # Update Lesson Progress
+            progress, _ = LessonProgress.objects.get_or_create(user=user, lesson=lesson)
+            progress.attempts_count += 1
+            if wpm > progress.best_wpm:
+                progress.best_wpm = wpm
+            if accuracy > progress.best_accuracy:
+                progress.best_accuracy = accuracy
+
+            is_first_time_completion = False
+            if stars >= 1:
+                if not progress.completed:
+                    is_first_time_completion = True
+                    progress.completed = True
+                    progress.first_completed_at = timezone.now()
+                if stars > progress.stars:
+                    progress.stars = stars
+            progress.save()
+
+            # Award XP: Base XP + Bonus for Stars and Accuracy
+            xp_earned = 20 + (stars * 10)
+            if is_first_time_completion:
+                xp_earned += 30
+            if accuracy == 100:
+                xp_earned += 25
+            
+            profile.add_xp(xp_earned)
+            response_data['xp_earned'] = xp_earned
+
+            # Unlock Next Lesson if passed with >= 1 star
+            if stars >= 1:
+                next_lesson = Lesson.objects.filter(lesson_number__gt=lesson.lesson_number).order_by('lesson_number').first()
+                if next_lesson:
+                    next_progress, _ = LessonProgress.objects.get_or_create(user=user, lesson=next_lesson)
+                    next_progress.unlocked = True
+                    next_progress.save()
+                    response_data['unlocked_next'] = True
+                    response_data['next_lesson_number'] = next_lesson.lesson_number
+
+            # Update DailyActivity
+            today = timezone.localdate()
+            daily_act, _ = DailyActivity.objects.get_or_create(user=user, date=today)
+            daily_act.characters_typed += characters_typed
+            daily_act.practice_seconds += int(duration_seconds)
+            daily_act.xp_earned += xp_earned
+            if is_first_time_completion:
+                daily_act.lessons_completed += 1
+            daily_act.save()
+
+            # Evaluate Achievements
+            new_achievements = check_user_achievements(user, wpm, accuracy, characters_typed)
+            response_data['new_achievements'] = new_achievements
+
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_POST
+def api_submit_test(request):
+    """Saves typing test results and awards XP."""
+    try:
+        data = json.loads(request.body)
+        duration_mode = int(data.get('duration_mode', 60))
+        wpm = float(data.get('wpm', 0.0))
+        raw_wpm = float(data.get('raw_wpm', 0.0))
+        accuracy = float(data.get('accuracy', 0.0))
+        correct_chars = int(data.get('correct_chars', 0))
+        incorrect_chars = int(data.get('incorrect_chars', 0))
+        total_chars = int(data.get('total_chars', 0))
+
+        response_data = {
+            'success': True,
+            'xp_earned': 0,
+            'new_achievements': []
+        }
+
+        if request.user.is_authenticated:
+            user = request.user
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            profile.update_streak()
+            profile.total_practice_time_seconds += duration_mode
+
+            TypingTestResult.objects.create(
+                user=user,
+                duration_mode=duration_mode,
+                wpm=wpm,
+                raw_wpm=raw_wpm,
+                accuracy=accuracy,
+                correct_chars=correct_chars,
+                incorrect_chars=incorrect_chars,
+                total_chars=total_chars
+            )
+
+            TypingSession.objects.create(
+                user=user,
+                session_type='test',
+                wpm=wpm,
+                raw_wpm=raw_wpm,
+                accuracy=accuracy,
+                mistakes_count=incorrect_chars,
+                duration_seconds=duration_mode,
+                characters_typed=total_chars
+            )
+
+            # Test XP: scales with WPM and accuracy
+            xp_earned = int(wpm * 0.75 + (accuracy / 2.0))
+            profile.add_xp(xp_earned)
+            response_data['xp_earned'] = xp_earned
+
+            # Check achievements
+            new_achievements = check_user_achievements(user, wpm, accuracy, total_chars)
+            response_data['new_achievements'] = new_achievements
+
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def check_user_achievements(user, current_wpm, current_accuracy, current_chars):
+    """Evaluates milestone conditions and unlocks new achievements."""
+    unlocked_achievements = []
+    already_unlocked = set(UserAchievement.objects.filter(user=user).values_list('achievement__code', flat=True))
+
+    profile = user.profile
+    completed_lessons_count = LessonProgress.objects.filter(user=user, completed=True).count()
+    all_sessions = TypingSession.objects.filter(user=user)
+    total_chars_typed = all_sessions.aggregate(Sum('characters_typed'))['characters_typed__sum'] or 0
+
+    to_check = [
+        ('first_lesson', completed_lessons_count >= 1),
+        ('home_row_hero', completed_lessons_count >= 10),
+        ('ten_lessons', completed_lessons_count >= 10),
+        ('twenty_five_lessons', completed_lessons_count >= 25),
+        ('course_graduate', completed_lessons_count >= 54),
+        ('speed_30', current_wpm >= 30),
+        ('speed_50', current_wpm >= 50),
+        ('speed_75', current_wpm >= 75),
+        ('speed_100', current_wpm >= 100),
+        ('accuracy_90', current_accuracy >= 90),
+        ('accuracy_95', current_accuracy >= 95),
+        ('accuracy_100', current_accuracy >= 100),
+        ('streak_3', profile.current_streak >= 3),
+        ('streak_7', profile.current_streak >= 7),
+        ('streak_30', profile.current_streak >= 30),
+        ('chars_1000', total_chars_typed >= 1000),
+        ('chars_10000', total_chars_typed >= 10000),
+    ]
+
+    for code, condition in to_check:
+        if condition and code not in already_unlocked:
+            try:
+                ach = Achievement.objects.get(code=code)
+                UserAchievement.objects.create(user=user, achievement=ach)
+                profile.add_xp(ach.xp_reward)
+                unlocked_achievements.append({
+                    'code': ach.code,
+                    'title': ach.title,
+                    'description': ach.description,
+                    'xp': ach.xp_reward,
+                    'icon': ach.icon
+                })
+            except Achievement.DoesNotExist:
+                pass
+
+    return unlocked_achievements

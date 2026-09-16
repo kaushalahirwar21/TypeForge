@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Typing Games Suite — TypeForge{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/games.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container games-hub-layout">
+
+  <!-- Header -->
+  <div style="text-align: center;">
+    <span class="badge badge-primary" style="margin-bottom: 0.5rem;">Interactive Arcade</span>
+    <h1 style="font-size: 2.25rem; font-weight: 800; color: #ffffff; margin-bottom: 0.5rem;">TypeForge Games</h1>
+    <p style="color: var(--text-muted); font-size: 1rem; max-width: 600px; margin: 0 auto;">
+      Reinforce touch-typing speed, reflexes, and precision with interactive arcade challenges.
+    </p>
+  </div>
+
+  <!-- Game Selector Cards (Tabs) -->
+  <div class="games-nav-grid">
+    <div class="game-card-select active" id="tab-falling-words">
+      <div>
+        <div class="game-select-icon">☄️</div>
+        <h3>Falling Words</h3>
+        <p>Words fall from the sky towards the danger zone. Type them before they hit the ground!</p>
+      </div>
+      <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--accent); font-weight: 700;">Play Now →</div>
+    </div>
+
+    <div class="game-card-select" id="tab-word-sprint">
+      <div>
+        <div class="game-select-icon">⚡</div>
+        <h3>Word Sprint</h3>
+        <p>A 60-second high-octane word blitz. How many words can you blast through before the timer runs out?</p>
+      </div>
+      <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--accent); font-weight: 700;">Play Now →</div>
+    </div>
+
+    <div class="game-card-select" id="tab-accuracy-challenge">
+      <div>
+        <div class="game-select-icon">🎯</div>
+        <h3>Accuracy Challenge</h3>
+        <p>Precision is everything. Type an intricate passage with zero mistakes. 3 strikes and you're out!</p>
+      </div>
+      <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--accent); font-weight: 700;">Play Now →</div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       GAME 1: FALLING WORDS ARENA
+       ========================================================================== -->
+  <div class="game-stage-container" id="game-container-falling">
+    <div class="game-hud">
+      <div class="game-score-badge">SCORE: <span id="falling-score">0</span></div>
+      <div style="font-size: 1.1rem; font-weight: 700; color: #ffffff;">☄️ Falling Words</div>
+      <div class="game-lives-bar" id="falling-lives">❤️❤️❤️</div>
+    </div>
+
+    <div class="falling-words-stage" id="falling-words-stage">
+      <div class="danger-line"></div>
+    </div>
+
+    <div class="game-input-wrapper">
+      <input type="text" id="falling-game-input" class="game-input" placeholder="Type falling words here..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+
+    <!-- Start / Game Over Overlay -->
+    <div class="game-overlay-modal" id="falling-game-overlay">
+      <h2>Falling Words</h2>
+      <p>Type each falling word before it touches the danger line at the bottom.</p>
+      <div style="font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 1.5rem;">
+        Final Score: <span id="falling-final-score" style="color: var(--accent);">0</span>
+      </div>
+      <button class="btn btn-primary btn-lg" id="falling-restart-btn">Start Game 🚀</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       GAME 2: WORD SPRINT ARENA
+       ========================================================================== -->
+  <div class="game-stage-container" id="game-container-sprint" style="display: none;">
+    <div class="game-hud">
+      <div class="game-score-badge">WORDS: <span id="sprint-score">0</span></div>
+      <div style="font-size: 1.1rem; font-weight: 700; color: #ffffff;">⚡ 60-Second Word Sprint</div>
+      <div style="font-size: 1.25rem; font-weight: 800; color: var(--warning);" id="sprint-timer">60s</div>
+    </div>
+
+    <div class="sprint-stage" id="sprint-stage">
+      <div class="sprint-target-word" id="sprint-target-word">ready</div>
+      <div class="sprint-upcoming-words" id="sprint-upcoming-words">set   go   focus   speed</div>
+      <div class="game-input-wrapper" style="width: 100%;">
+        <input type="text" id="sprint-input" class="game-input" placeholder="Type current word..." autocomplete="off">
+      </div>
+    </div>
+
+    <!-- Start / Game Over Overlay -->
+    <div class="game-overlay-modal" id="sprint-overlay">
+      <h2>Word Sprint</h2>
+      <p>Type as many words as you can in 60 seconds.</p>
+      <div style="margin-bottom: 1.5rem;">
+        <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent);" id="sprint-final-score">0 words</div>
+        <div style="font-size: 1.1rem; color: #60a5fa;" id="sprint-final-wpm">0 WPM</div>
+      </div>
+      <button class="btn btn-primary btn-lg" id="sprint-restart-btn">Start Sprint ⚡</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       GAME 3: ACCURACY CHALLENGE ARENA
+       ========================================================================== -->
+  <div class="game-stage-container" id="game-container-accuracy" style="display: none;">
+    <div class="game-hud">
+      <div class="game-score-badge">PRECISION: <span id="accuracy-score">0</span></div>
+      <div style="font-size: 1.1rem; font-weight: 700; color: #ffffff;">🎯 Accuracy Challenge</div>
+      <div class="game-lives-bar" id="accuracy-lives">🛡️🛡️🛡️</div>
+    </div>
+
+    <div class="accuracy-stage" id="accuracy-stage">
+      <div class="accuracy-target-passage font-size-medium" id="accuracy-target-passage">
+        <!-- Target passage spans -->
+      </div>
+      <div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+        Type directly using your keyboard. Avoid mistakes to protect your shields!
+      </div>
+    </div>
+
+    <!-- Start / Game Over Overlay -->
+    <div class="game-overlay-modal" id="accuracy-overlay">
+      <h2 id="accuracy-final-title">Accuracy Challenge</h2>
+      <p id="accuracy-final-desc">Maintain high precision. 3 mistakes and your shields break!</p>
+      <button class="btn btn-primary btn-lg" id="accuracy-restart-btn">Begin Challenge 🎯</button>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/games/falling-words.js' %}"></script>
+<script src="{% static 'js/games/word-sprint.js' %}"></script>
+<script src="{% static 'js/games/accuracy-challenge.js' %}"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabFalling = document.getElementById('tab-falling-words');
+    const tabSprint = document.getElementById('tab-word-sprint');
+    const tabAccuracy = document.getElementById('tab-accuracy-challenge');
+
+    const containerFalling = document.getElementById('game-container-falling');
+    const containerSprint = document.getElementById('game-container-sprint');
+    const containerAccuracy = document.getElementById('game-container-accuracy');
+
+    const gameFalling = new FallingWordsGame();
+    const gameSprint = new WordSprintGame();
+    const gameAccuracy = new AccuracyChallengeGame();
+
+    function switchGame(activeTab, activeContainer, stopCallback) {
+      [tabFalling, tabSprint, tabAccuracy].forEach(t => t.classList.remove('active'));
+      [containerFalling, containerSprint, containerAccuracy].forEach(c => c.style.display = 'none');
+
+      activeTab.classList.add('active');
+      activeContainer.style.display = 'block';
+
+      if (stopCallback) stopCallback();
+    }
+
+    tabFalling.addEventListener('click', () => {
+      switchGame(tabFalling, containerFalling, () => {
+        gameSprint.reset();
+      });
+    });
+
+    tabSprint.addEventListener('click', () => {
+      switchGame(tabSprint, containerSprint, () => {
+        gameFalling.reset();
+      });
+    });
+
+    tabAccuracy.addEventListener('click', () => {
+      switchGame(tabAccuracy, containerAccuracy, () => {
+        gameFalling.reset();
+        gameSprint.reset();
+      });
+    });
+  });
+</script>
+{% endblock %}
