@@ -750,3 +750,29 @@ def check_user_achievements(user, current_wpm, current_accuracy, current_chars):
                 pass
 
     return unlocked_achievements
+
+
+def health_check(request):
+    """
+    Health check endpoint for Render health monitoring and status probes.
+    Verifies application execution and database connectivity.
+    """
+    from django.db import connection
+    from django.conf import settings
+
+    db_status = "connected"
+    status_code = 200
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1;")
+            cursor.fetchone()
+    except Exception as e:
+        db_status = f"unavailable: {str(e)}"
+        status_code = 503
+
+    return JsonResponse({
+        "status": "healthy" if status_code == 200 else "unhealthy",
+        "database": db_status,
+        "environment": "development" if settings.DEBUG else "production",
+    }, status=status_code)
+
