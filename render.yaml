@@ -20,9 +20,9 @@ services:
           name: typeforge-db
           property: connectionString
       - key: ALLOWED_HOSTS
-        value: ".onrender.com,localhost,127.0.0.1"
+        value: ".onrender.com,localhost,127.0.0.1,typeforge.ai,www.typeforge.ai"
       - key: CSRF_TRUSTED_ORIGINS
-        value: "https://*.onrender.com"
+        value: "https://*.onrender.com,https://typeforge.ai,https://www.typeforge.ai"
 
 databases:
   - name: typeforge-db

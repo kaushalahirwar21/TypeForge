@@ -58,6 +58,14 @@ if RENDER_EXTERNAL_HOSTNAME:
     if render_origin not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(render_origin)
 
+# Support custom domain typeforge.ai
+for custom_domain in ['typeforge.ai', 'www.typeforge.ai']:
+    if custom_domain not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(custom_domain)
+    custom_origin = f"https://{custom_domain}"
+    if custom_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(custom_origin)
+
 # Render reverse proxy SSL header
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
