@@ -1,0 +1,46 @@
+{% load static %}
+<div class="dev-profile-card">
+  <div class="dev-photo-wrapper">
+    <img 
+      src="{% static 'img/developer.png' %}" 
+      alt="Kaushal Singh Ahirwar — Full-stack Developer and Creator of TypeForge" 
+      class="dev-photo"
+      width="140"
+      height="140"
+      loading="lazy"
+    >
+  </div>
+  <div class="dev-info">
+    <h3 class="dev-name">{{ DEVELOPER_NAME|default:"Kaushal Singh Ahirwar" }}</h3>
+    <div class="dev-role">{{ DEVELOPER_ROLE|default:"Full-stack Developer" }}</div>
+    <div class="dev-typeforge-role">{{ DEVELOPER_TYPEFORGE_ROLE|default:"TypeForge — Creator & Developer" }}</div>
+    <div class="dev-links">
+      <a 
+        href="{{ DEVELOPER_LINKEDIN_URL|default:'https://www.linkedin.com/in/kaushal-singh-ahirwar' }}" 
+        class="dev-btn dev-btn-linkedin" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        aria-label="Visit Kaushal Singh Ahirwar on LinkedIn"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+        </svg>
+        <span>LinkedIn</span>
+      </a>
+      <a 
+        href="{{ DEVELOPER_PORTFOLIO_URL|default:'https://kaushal-port.netlify.app/' }}" 
+        class="dev-btn dev-btn-portfolio" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        aria-label="Visit Kaushal Singh Ahirwar Portfolio"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span>Portfolio</span>
+      </a>
+    </div>
+  </div>
+</div>

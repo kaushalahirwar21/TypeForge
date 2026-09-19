@@ -238,3 +238,11 @@ else:
     DEFAULT_FROM_EMAIL = f"{email_sender_name} <noreply@typeforge.com>"
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
+# Developer Profile Details & External URLs
+DEVELOPER_NAME = 'Kaushal Singh Ahirwar'
+DEVELOPER_ROLE = 'Full-stack Developer'
+DEVELOPER_TYPEFORGE_ROLE = 'TypeForge — Creator & Developer'
+DEVELOPER_LINKEDIN_URL = os.environ.get('DEVELOPER_LINKEDIN_URL', 'https://www.linkedin.com/in/kaushal-singh-ahirwar')
+DEVELOPER_PORTFOLIO_URL = os.environ.get('DEVELOPER_PORTFOLIO_URL', 'https://kaushal-port.netlify.app/')
+
+

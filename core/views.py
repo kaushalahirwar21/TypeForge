@@ -35,6 +35,10 @@ def about(request):
     return render(request, 'pages/about.html')
 
 
+def developer_view(request):
+    return render(request, 'pages/developer.html')
+
+
 def help_faq(request):
     return render(request, 'pages/help.html')
 

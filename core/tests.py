@@ -146,9 +146,28 @@ class TypeForgeViewAndAPITests(TestCase):
         )
 
     def test_public_pages_render(self):
-        for route in ['landing', 'about', 'help', 'login', 'signup', 'typing_test', 'games']:
+        for route in ['landing', 'about', 'developer', 'help', 'login', 'signup', 'typing_test', 'games']:
             response = self.client.get(reverse(route))
             self.assertEqual(response.status_code, 200, f"Route {route} failed to return 200")
+
+    def test_developer_profile_content(self):
+        # Verify /developer page content
+        response = self.client.get(reverse('developer'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Kaushal Singh Ahirwar')
+        self.assertContains(response, 'Full-stack Developer')
+        self.assertContains(response, 'TypeForge — Creator &amp; Developer')
+        self.assertContains(response, 'developer.png')
+        self.assertContains(response, 'https://www.linkedin.com/in/kaushal-singh-ahirwar')
+        self.assertContains(response, 'https://kaushal-port.netlify.app/')
+
+        # Verify /about page also contains Meet the Developer section
+        about_response = self.client.get(reverse('about'))
+        self.assertEqual(about_response.status_code, 200)
+        self.assertContains(about_response, 'Meet the Developer')
+        self.assertContains(about_response, 'Kaushal Singh Ahirwar')
+        self.assertContains(about_response, 'developer.png')
+
 
     def test_signup_creates_account_and_logs_in(self):
         from core.models import EmailOTP

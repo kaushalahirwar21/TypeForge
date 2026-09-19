@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.landing, name='landing'),
     path('health/', views.health_check, name='health_check'),
     path('about/', views.about, name='about'),
+    path('developer/', views.developer_view, name='developer'),
     path('help/', views.help_faq, name='help'),
 
     # Authentication

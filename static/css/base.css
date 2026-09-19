@@ -775,3 +775,198 @@ a:hover {
     padding: 1.15rem;
   }
 }
+
+/* ==========================================================================
+   Developer Profile Section & Card (Premium Clean Light Theme)
+   ========================================================================== */
+.dev-profile-section {
+  width: 100%;
+  max-width: 780px;
+  margin: 3.5rem auto 1rem;
+}
+
+.dev-profile-card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  padding: 2.75rem 2.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dev-profile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.12), 0 8px 12px -6px rgba(0, 0, 0, 0.05);
+}
+
+.dev-photo-wrapper {
+  flex-shrink: 0;
+}
+
+.dev-photo {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  border: 3.5px solid #3b82f6;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
+  background-color: #ffffff;
+}
+
+.dev-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.dev-name {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.35rem 0;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.dev-role {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2563eb;
+  margin: 0 0 0.35rem 0;
+  line-height: 1.3;
+}
+
+.dev-typeforge-role {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.4;
+}
+
+.dev-links {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.dev-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.65rem 1.4rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.dev-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.dev-btn-linkedin {
+  background-color: #0a66c2;
+  color: #ffffff !important;
+  border: 1px solid #0a66c2;
+  box-shadow: 0 2px 4px rgba(10, 102, 194, 0.2);
+}
+
+.dev-btn-linkedin:hover {
+  background-color: #004182;
+  border-color: #004182;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(10, 102, 194, 0.35);
+  transform: translateY(-1px);
+}
+
+.dev-btn-portfolio {
+  background-color: #ffffff;
+  color: #0f172a !important;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.dev-btn-portfolio:hover {
+  background-color: #f8fafc;
+  border-color: #3b82f6;
+  color: #2563eb !important;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Tablet & Mobile Breakpoint for Developer Profile */
+@media (max-width: 768px) {
+  .dev-profile-section {
+    margin: 2.5rem auto 1rem;
+    padding: 0 0.5rem;
+  }
+
+  .dev-profile-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 2.25rem 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .dev-photo {
+    width: 128px;
+    height: 128px;
+  }
+
+  .dev-info {
+    align-items: center;
+  }
+
+  .dev-name {
+    font-size: 1.6rem;
+  }
+
+  .dev-role {
+    font-size: 1.05rem;
+  }
+
+  .dev-typeforge-role {
+    margin-bottom: 1.5rem;
+  }
+
+  .dev-links {
+    flex-direction: column;
+    width: 100%;
+    max-width: 320px;
+    gap: 0.75rem;
+  }
+
+  .dev-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .dev-profile-card {
+    padding: 1.75rem 1rem;
+  }
+
+  .dev-photo {
+    width: 110px;
+    height: 110px;
+  }
+
+  .dev-name {
+    font-size: 1.4rem;
+  }
+}
+
