@@ -151,6 +151,8 @@ class TypeForgeViewAndAPITests(TestCase):
             self.assertEqual(response.status_code, 200, f"Route {route} failed to return 200")
 
     def test_signup_creates_account_and_logs_in(self):
+        from core.models import EmailOTP
+        # Step 1: Initial signup triggers OTP dispatch
         response = self.client.post(reverse('signup'), {
             'name': 'Alice Wonder',
             'email': 'alice@example.com',
@@ -158,7 +160,51 @@ class TypeForgeViewAndAPITests(TestCase):
             'password_confirm': 'SecurePassword123!'
         })
         self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('verify_otp'))
+
+        # Verify OTP was created in database
+        otp = EmailOTP.objects.filter(email='alice@example.com', purpose=EmailOTP.PURPOSE_SIGNUP).first()
+        self.assertIsNotNone(otp)
+        self.assertEqual(len(otp.otp_code), 6)
+
+        # Step 2: Submit valid OTP to complete registration
+        verify_response = self.client.post(reverse('verify_otp'), {
+            'otp_code': otp.otp_code
+        })
+        self.assertEqual(verify_response.status_code, 302)
+        self.assertRedirects(verify_response, reverse('dashboard'))
+
+        # User is now created and authenticated
         self.assertTrue(User.objects.filter(email='alice@example.com').exists())
+        user = User.objects.get(email='alice@example.com')
+        self.assertEqual(user.first_name, 'Alice')
+        self.assertEqual(user.last_name, 'Wonder')
+
+    def test_forgot_password_and_reset_with_otp(self):
+        from core.models import EmailOTP
+        # Request password reset OTP
+        res = self.client.post(reverse('forgot_password'), {
+            'email': self.user.email
+        })
+        self.assertEqual(res.status_code, 302)
+        self.assertRedirects(res, reverse('reset_password_otp'))
+
+        otp = EmailOTP.objects.filter(email=self.user.email, purpose=EmailOTP.PURPOSE_FORGOT_PASSWORD).first()
+        self.assertIsNotNone(otp)
+
+        # Reset password with OTP
+        reset_res = self.client.post(reverse('reset_password_otp'), {
+            'otp_code': otp.otp_code,
+            'new_password': 'BrandNewPassword2026!',
+            'confirm_password': 'BrandNewPassword2026!'
+        })
+        self.assertEqual(reset_res.status_code, 302)
+        self.assertRedirects(reset_res, reverse('login'))
+
+        # Check new password works
+        login_res = self.client.login(username=self.user.username, password='BrandNewPassword2026!')
+        self.assertTrue(login_res)
+
 
     def test_login_and_dashboard_access(self):
         login_success = self.client.login(username='speedster', password='StrongPassword123')

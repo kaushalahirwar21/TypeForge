@@ -23,6 +23,12 @@ services:
         value: ".onrender.com,localhost,127.0.0.1,typeforge.ai,www.typeforge.ai"
       - key: CSRF_TRUSTED_ORIGINS
         value: "https://*.onrender.com,https://typeforge.ai,https://www.typeforge.ai"
+      - key: EMAIL_FROM_NAME
+        value: "TypeForge"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
 
 databases:
   - name: typeforge-db

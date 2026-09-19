@@ -12,9 +12,11 @@ import datetime
 
 from .models import (
     UserProfile, UserSettings, Course, Lesson, LessonProgress,
-    TypingSession, TypingTestResult, Achievement, UserAchievement, DailyActivity
+    TypingSession, TypingTestResult, Achievement, UserAchievement, DailyActivity,
+    EmailOTP
 )
 from .forms import SignUpForm, CustomLoginForm, ProfileEditForm, UserSettingsForm
+from .email_service import create_and_send_otp, verify_otp_code
 
 
 def landing(request):
@@ -44,22 +46,118 @@ def signup_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            # Initialize Lesson 1 as unlocked
-            first_lesson = Lesson.objects.order_by('level_number', 'lesson_number').first()
-            if first_lesson:
-                LessonProgress.objects.create(
-                    user=user,
-                    lesson=first_lesson,
-                    unlocked=True
-                )
-            login(request, user)
-            messages.success(request, f"Welcome to TypeForge, {user.first_name or user.username}! Let's start your touch typing journey.")
-            return redirect('dashboard')
+            email = form.cleaned_data['email'].strip().lower()
+            name = form.cleaned_data.get('name', '').strip()
+            password = form.cleaned_data['password']
+
+            # Send OTP email
+            success, msg = create_and_send_otp(email, EmailOTP.PURPOSE_SIGNUP, user_name=name)
+            if success:
+                request.session['pending_signup'] = {
+                    'email': email,
+                    'name': name,
+                    'password': password,
+                }
+                messages.success(request, f"A 6-digit verification code has been dispatched to {email}. Enter it below to activate your account.")
+                return redirect('verify_otp')
+            else:
+                messages.error(request, f"Unable to dispatch verification email: {msg}. Please check your email configuration.")
     else:
         form = SignUpForm()
     
     return render(request, 'auth/signup.html', {'form': form})
+
+
+def verify_otp_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    pending_signup = request.session.get('pending_signup')
+    if not pending_signup:
+        messages.warning(request, "No pending registration found. Please fill out the sign up form first.")
+        return redirect('signup')
+
+    email = pending_signup.get('email')
+    name = pending_signup.get('name', '')
+
+    if request.method == 'POST':
+        otp_code = request.POST.get('otp_code', '').strip()
+        if not otp_code and 'digit1' in request.POST:
+            otp_code = ''.join([request.POST.get(f'digit{i}', '').strip() for i in range(1, 7)])
+
+        is_valid, msg = verify_otp_code(email, otp_code, EmailOTP.PURPOSE_SIGNUP)
+        if is_valid:
+            if User.objects.filter(email__iexact=email).exists():
+                messages.error(request, "An account with this email address already exists. Please log in.")
+                return redirect('login')
+
+            # Create User
+            parts = name.split(None, 1)
+            first_name = parts[0] if parts else ''
+            last_name = parts[1] if len(parts) > 1 else ''
+            base_username = email.split('@')[0].lower()
+            username = base_username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=pending_signup['password'],
+                first_name=first_name,
+                last_name=last_name,
+            )
+
+            # Initialize Lesson 1 as unlocked
+            first_lesson = Lesson.objects.order_by('level_number', 'lesson_number').first()
+            if first_lesson:
+                LessonProgress.objects.get_or_create(
+                    user=user,
+                    lesson=first_lesson,
+                    defaults={'unlocked': True}
+                )
+
+            # Clean session
+            if 'pending_signup' in request.session:
+                del request.session['pending_signup']
+
+            login(request, user)
+            messages.success(request, f"Welcome to TypeForge, {user.first_name or user.username}! Your email has been verified successfully.")
+            return redirect('dashboard')
+        else:
+            messages.error(request, msg)
+
+    return render(request, 'auth/verify_otp.html', {
+        'email': email,
+        'name': name,
+    })
+
+
+def resend_otp_view(request):
+    purpose = request.GET.get('purpose', 'signup')
+    if purpose == 'forgot_password':
+        email = request.session.get('reset_password_email')
+        name = "Typist"
+        redirect_url = 'reset_password_otp'
+    else:
+        pending_signup = request.session.get('pending_signup')
+        email = pending_signup.get('email') if pending_signup else None
+        name = pending_signup.get('name', 'Typist') if pending_signup else 'Typist'
+        redirect_url = 'verify_otp'
+
+    if not email:
+        messages.error(request, "Session expired. Please start the process again.")
+        return redirect('signup' if purpose == 'signup' else 'forgot_password')
+
+    success, msg = create_and_send_otp(email, purpose, user_name=name)
+    if success:
+        messages.success(request, f"A fresh 6-digit verification code has been dispatched to {email}.")
+    else:
+        messages.error(request, f"Could not resend code: {msg}")
+
+    return redirect(redirect_url)
 
 
 def login_view(request):
@@ -109,14 +207,72 @@ def logout_view(request):
 
 
 def forgot_password_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
     if request.method == 'POST':
-        email = request.POST.get('email', '').strip()
-        if email:
-            messages.success(request, f"Password reset instructions have been dispatched to {email}. (Development mode notice: check console/email).")
-            return redirect('reset_password_done')
+        email = request.POST.get('email', '').strip().lower()
+        if not email:
+            messages.error(request, "Please enter your registered email address.")
+            return render(request, 'auth/forgot_password.html')
+
+        user = User.objects.filter(email__iexact=email).first()
+        if user:
+            success, msg = create_and_send_otp(
+                email=user.email,
+                purpose=EmailOTP.PURPOSE_FORGOT_PASSWORD,
+                user_name=user.first_name or user.username
+            )
+            if success:
+                request.session['reset_password_email'] = user.email
+                messages.success(request, f"A 6-digit password reset code has been sent to {user.email}.")
+                return redirect('reset_password_otp')
+            else:
+                messages.error(request, f"Failed to send reset email: {msg}. Please try again later.")
         else:
-            messages.error(request, "Please provide a valid email address.")
+            messages.error(request, "No registered account found with that email address.")
+
     return render(request, 'auth/forgot_password.html')
+
+
+def reset_password_otp_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    email = request.session.get('reset_password_email')
+    if not email:
+        messages.warning(request, "Password reset session expired. Please enter your email again.")
+        return redirect('forgot_password')
+
+    if request.method == 'POST':
+        otp_code = request.POST.get('otp_code', '').strip()
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+
+        if not new_password or len(new_password) < 6:
+            messages.error(request, "Password must be at least 6 characters long.")
+            return render(request, 'auth/reset_password_otp.html', {'email': email})
+
+        if new_password != confirm_password:
+            messages.error(request, "Passwords do not match. Please re-enter.")
+            return render(request, 'auth/reset_password_otp.html', {'email': email})
+
+        is_valid, msg = verify_otp_code(email, otp_code, EmailOTP.PURPOSE_FORGOT_PASSWORD)
+        if is_valid:
+            user = User.objects.filter(email__iexact=email).first()
+            if user:
+                user.set_password(new_password)
+                user.save()
+                if 'reset_password_email' in request.session:
+                    del request.session['reset_password_email']
+                messages.success(request, "Your password has been reset successfully! You can now log in with your new password.")
+                return redirect('login')
+            else:
+                messages.error(request, "User account not found.")
+        else:
+            messages.error(request, msg)
+
+    return render(request, 'auth/reset_password_otp.html', {'email': email})
 
 
 def reset_password_done_view(request):

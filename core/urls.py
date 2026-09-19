@@ -10,9 +10,12 @@ urlpatterns = [
 
     # Authentication
     path('signup/', views.signup_view, name='signup'),
+    path('verify-otp/', views.verify_otp_view, name='verify_otp'),
+    path('resend-otp/', views.resend_otp_view, name='resend_otp'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('forgot-password/', views.forgot_password_view, name='forgot_password'),
+    path('reset-password-otp/', views.reset_password_otp_view, name='reset_password_otp'),
     path('reset-password-done/', views.reset_password_done_view, name='reset_password_done'),
 
     # Application Pages

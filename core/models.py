@@ -293,3 +293,31 @@ class DailyActivity(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.date}: {self.characters_typed} chars"
+
+
+class EmailOTP(models.Model):
+    PURPOSE_SIGNUP = 'signup'
+    PURPOSE_FORGOT_PASSWORD = 'forgot_password'
+    PURPOSE_CHOICES = [
+        (PURPOSE_SIGNUP, 'Signup Verification'),
+        (PURPOSE_FORGOT_PASSWORD, 'Password Reset'),
+    ]
+
+    email = models.EmailField(db_index=True)
+    otp_code = models.CharField(max_length=6)
+    purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'Email OTP'
+        verbose_name_plural = 'Email OTPs'
+        ordering = ['-created_at']
+
+    def is_valid(self):
+        return not self.is_used and timezone.now() <= self.expires_at
+
+    def __str__(self):
+        return f"{self.email} - {self.otp_code} ({self.purpose})"
+

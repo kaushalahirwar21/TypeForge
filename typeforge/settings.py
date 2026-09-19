@@ -215,3 +215,26 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 }
+
+# Email Configuration (SMTP with console fallback for development without credentials)
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '').strip()
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').strip()
+
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+else:
+    # Development fallback: prints email contents to terminal/logs without failing
+    EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+EMAIL_TIMEOUT = 10
+
+email_sender_name = os.environ.get('EMAIL_FROM_NAME', 'TypeForge')
+if EMAIL_HOST_USER:
+    DEFAULT_FROM_EMAIL = f"{email_sender_name} <{EMAIL_HOST_USER}>"
+else:
+    DEFAULT_FROM_EMAIL = f"{email_sender_name} <noreply@typeforge.com>"
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
