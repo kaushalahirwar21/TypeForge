@@ -1,5 +1,5 @@
 /* ==========================================================================
-   TypeForge Core Design System & Base Styles
+   TypeRise Core Design System & Base Styles
    ========================================================================== */
 
 :root {
@@ -841,6 +841,7 @@ a:hover {
   line-height: 1.3;
 }
 
+.dev-typerise-role,
 .dev-typeforge-role {
   font-size: 0.95rem;
   font-weight: 500;
@@ -938,6 +939,7 @@ a:hover {
     font-size: 1.05rem;
   }
 
+  .dev-typerise-role,
   .dev-typeforge-role {
     margin-bottom: 1.5rem;
   }

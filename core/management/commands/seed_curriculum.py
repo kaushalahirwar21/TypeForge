@@ -2,10 +2,10 @@ from django.core.management.base import BaseCommand
 from core.models import Course, Lesson, Achievement
 
 class Command(BaseCommand):
-    help = 'Seeds TypeForge curriculum with 13 progressive stages, 54 lessons, teacher modules, and spaced repetition'
+    help = 'Seeds TypeRise curriculum with 13 progressive stages, 54 lessons, teacher modules, and spaced repetition'
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.NOTICE("Seeding TypeForge pedagogical curriculum..."))
+        self.stdout.write(self.style.NOTICE("Seeding TypeRise pedagogical curriculum..."))
 
         course, _ = Course.objects.get_or_create(
             slug='touch-typing-mastery',
@@ -1164,15 +1164,15 @@ class Command(BaseCommand):
                 'lesson_number': 54,
                 'title': 'The Grandmaster Graduation',
                 'slug': 'grandmaster-graduation',
-                'key_name': 'TypeForge Graduation',
+                'key_name': 'TypeRise Graduation',
                 'target_finger': 'All Fingers (Complete Master)',
                 'finger_hand': 'Both Hands',
                 'finger_why': 'Synthesizes letters, numbers, capitals, symbols, and punctuation into complete touch-typing mastery.',
                 'skill_learned': 'Elite touch-typing mastery (top 5% global competence).',
                 'spaced_repetition_keys': 'full keyboard (letters, numbers, symbols)',
-                'learning_objective': 'Goal: Graduate from TypeForge as an elite touch typist with 60+ WPM and 95%+ accuracy.',
+                'learning_objective': 'Goal: Graduate from TypeRise as an elite touch typist with 60+ WPM and 95%+ accuracy.',
                 'instruction': 'This is your capstone challenge. Combine speed, accuracy, numbers, and symbols.',
-                'target_text': 'Congratulations! By mastering touch typing on TypeForge, you have joined the top 5% of computer users worldwide: typing at 60+ WPM with over 95% accuracy!',
+                'target_text': 'Congratulations! By mastering touch typing on TypeRise, you have joined the top 5% of computer users worldwide: typing at 60+ WPM with over 95% accuracy!',
                 'keys_introduced': 'capstone',
                 'min_wpm_3stars': 40,
                 'min_wpm_4stars': 55,

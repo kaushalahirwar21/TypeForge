@@ -1,5 +1,5 @@
 /**
- * TypeForge Virtual Keyboard & Finger Guide Coordinator
+ * TypeRise Virtual Keyboard & Finger Guide Coordinator
  * Accurately maps all characters, shifts, fingers and SVG vectors.
  */
 
@@ -110,7 +110,7 @@ const KEY_MAPPINGS = {
   ' ': { code: 'Space', finger: 'thumb', name: 'Thumb' },
 };
 
-class TypeForgeKeyboard {
+class TypeRiseKeyboard {
   constructor(keyboardElemId = 'virtual-keyboard', handGuideElemId = 'hand-guide') {
     this.keyboardElem = document.getElementById(keyboardElemId);
     this.handGuideElem = document.getElementById(handGuideElemId);
@@ -195,5 +195,6 @@ class TypeForgeKeyboard {
 }
 
 window.KEY_MAPPINGS = KEY_MAPPINGS;
-window.TypeForgeKeyboard = TypeForgeKeyboard;
+window.TypeRiseKeyboard = TypeRiseKeyboard;
+window.TypeForgeKeyboard = TypeRiseKeyboard; // Backwards compatibility
 

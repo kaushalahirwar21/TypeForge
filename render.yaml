@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: typeforge
+    name: typerise
     runtime: python
     region: oregon
     plan: free
@@ -17,22 +17,29 @@ services:
         generateValue: true
       - key: DATABASE_URL
         fromDatabase:
-          name: typeforge-db
+          name: typerise-db
           property: connectionString
       - key: ALLOWED_HOSTS
-        value: ".onrender.com,localhost,127.0.0.1,typeforge.ai,www.typeforge.ai"
+        value: ".onrender.com,localhost,127.0.0.1,typerise.ai,www.typerise.ai"
       - key: CSRF_TRUSTED_ORIGINS
-        value: "https://*.onrender.com,https://typeforge.ai,https://www.typeforge.ai"
+        value: "https://*.onrender.com,https://typerise.ai,https://www.typerise.ai"
       - key: EMAIL_FROM_NAME
-        value: "TypeForge"
+        value: "TypeRise"
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
       - key: EMAIL_HOST_USER
         sync: false
       - key: EMAIL_HOST_PASSWORD
         sync: false
 
 databases:
-  - name: typeforge-db
+  - name: typerise-db
     plan: free
     region: oregon
-    databaseName: typeforge
-    user: typeforge_user
+    databaseName: typerise
+    user: typerise_user
+

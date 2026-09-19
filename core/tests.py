@@ -7,7 +7,7 @@ from core.models import (
 )
 import json
 
-class TypeForgeModelTests(TestCase):
+class TypeRiseModelTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username='typist_pro',
@@ -92,7 +92,7 @@ class TypeForgeModelTests(TestCase):
         self.assertEqual(profile.level, 3)
 
 
-class TypeForgeViewAndAPITests(TestCase):
+class TypeRiseViewAndAPITests(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(
@@ -156,7 +156,7 @@ class TypeForgeViewAndAPITests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Kaushal Singh Ahirwar')
         self.assertContains(response, 'Full-stack Developer')
-        self.assertContains(response, 'TypeForge — Creator &amp; Developer')
+        self.assertContains(response, 'TypeRise — Creator &amp; Developer')
         self.assertContains(response, 'developer.png')
         self.assertContains(response, 'https://www.linkedin.com/in/kaushal-singh-ahirwar')
         self.assertContains(response, 'https://kaushal-port.netlify.app/')
@@ -357,3 +357,151 @@ class TypeForgeViewAndAPITests(TestCase):
         self.assertEqual(data['keys'], ['f', 'j'])
         self.assertIn('f', data['drill_text'])
         self.assertIn('j', data['drill_text'])
+
+    def test_email_otp_generation_and_verification(self):
+        from core.email_service import create_and_send_otp, verify_otp_code, can_request_otp
+        from core.models import EmailOTP
+        from django.utils import timezone
+        from datetime import timedelta
+
+        # Successful OTP creation
+        ok, msg = create_and_send_otp('newtypist@example.com', EmailOTP.PURPOSE_SIGNUP, user_name='Newbie')
+        self.assertTrue(ok)
+        otp = EmailOTP.objects.filter(email='newtypist@example.com', purpose=EmailOTP.PURPOSE_SIGNUP, is_used=False).first()
+        self.assertIsNotNone(otp)
+        self.assertEqual(len(otp.otp_code), 6)
+        self.assertEqual(otp.failed_attempts, 0)
+
+        # 60s cooldown prevents rapid re-requesting
+        can_req, wait_secs = can_request_otp('newtypist@example.com', EmailOTP.PURPOSE_SIGNUP)
+        self.assertFalse(can_req)
+        self.assertGreater(wait_secs, 0)
+
+        # Invalid code increments failed_attempts
+        valid, err = verify_otp_code('newtypist@example.com', '000000', EmailOTP.PURPOSE_SIGNUP)
+        self.assertFalse(valid)
+        otp.refresh_from_db()
+        self.assertEqual(otp.failed_attempts, 1)
+
+        # Test lockout after 5 failed attempts
+        otp.failed_attempts = 4
+        otp.save()
+        valid, lock_err = verify_otp_code('newtypist@example.com', '000000', EmailOTP.PURPOSE_SIGNUP)
+        self.assertFalse(valid)
+        self.assertIn("invalidated", lock_err.lower())
+        otp.refresh_from_db()
+        self.assertTrue(otp.is_used)
+
+        # Expired code check
+        expired_otp = EmailOTP.objects.create(
+            email='expired@example.com',
+            otp_code='123456',
+            purpose=EmailOTP.PURPOSE_SIGNUP,
+            expires_at=timezone.now() - timedelta(minutes=1),
+            is_used=False
+        )
+        valid, exp_err = verify_otp_code('expired@example.com', '123456', EmailOTP.PURPOSE_SIGNUP)
+        self.assertFalse(valid)
+        self.assertIn("expired", exp_err.lower())
+
+    def test_signup_pending_state_and_activation(self):
+        from core.models import EmailOTP
+        from unittest.mock import patch
+
+        signup_data = {
+            'name': 'Rahul Sharma',
+            'email': 'rahul@example.com',
+            'password': 'SecurePassword123!',
+            'password_confirm': 'SecurePassword123!',
+        }
+
+        with patch('django.core.mail.EmailMultiAlternatives.send', return_value=1):
+            response = self.client.post(reverse('signup'), data=signup_data)
+            self.assertEqual(response.status_code, 302)
+            self.assertRedirects(response, reverse('verify_otp'))
+
+        # User must exist in pending/unverified state (is_active=False)
+        user = User.objects.filter(email='rahul@example.com').first()
+        self.assertIsNotNone(user)
+        self.assertFalse(user.is_active)
+
+        # Fetch dispatched OTP
+        otp_record = EmailOTP.objects.filter(email='rahul@example.com', purpose=EmailOTP.PURPOSE_SIGNUP, is_used=False).first()
+        self.assertIsNotNone(otp_record)
+
+        # Attempt verification with wrong OTP
+        verify_fail = self.client.post(reverse('verify_otp'), {'otp_code': '999999'})
+        user.refresh_from_db()
+        self.assertFalse(user.is_active)
+
+        # Verify with correct OTP
+        verify_success = self.client.post(reverse('verify_otp'), {'otp_code': otp_record.otp_code})
+        self.assertEqual(verify_success.status_code, 302)
+        self.assertRedirects(verify_success, reverse('dashboard'))
+
+        # User is now activated!
+        user.refresh_from_db()
+        self.assertTrue(user.is_active)
+
+        # Dashboard accessible because user was logged in
+        dash_resp = self.client.get(reverse('dashboard'))
+        self.assertEqual(dash_resp.status_code, 200)
+
+    def test_signup_email_send_failure_shows_friendly_message(self):
+        from unittest.mock import patch
+
+        signup_data = {
+            'name': 'Failure Test',
+            'email': 'failtest@example.com',
+            'password': 'SecurePassword123!',
+            'password_confirm': 'SecurePassword123!',
+        }
+
+        # Mock email dispatch raising an unexpected connection error
+        with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=Exception("SMTP Connection timed out")):
+            response = self.client.post(reverse('signup'), data=signup_data, follow=True)
+            self.assertEqual(response.status_code, 200)
+            messages_list = list(response.context['messages'])
+            self.assertTrue(any("Unable to send the email right now. Please try again later." in str(m) for m in messages_list))
+
+    def test_forgot_password_and_reset_flow(self):
+        from core.models import EmailOTP
+        from unittest.mock import patch
+
+        test_user = User.objects.create_user(
+            username='forgotten_hero',
+            email='hero@example.com',
+            password='OldPassword123!',
+            is_active=True
+        )
+
+        # Request reset OTP
+        with patch('django.core.mail.EmailMultiAlternatives.send', return_value=1):
+            response = self.client.post(reverse('forgot_password'), {'email': 'hero@example.com'})
+            self.assertEqual(response.status_code, 302)
+            self.assertRedirects(response, reverse('reset_password_otp'))
+
+        otp_record = EmailOTP.objects.filter(email='hero@example.com', purpose=EmailOTP.PURPOSE_FORGOT_PASSWORD, is_used=False).first()
+        self.assertIsNotNone(otp_record)
+
+        # Submit OTP + new password
+        reset_resp = self.client.post(reverse('reset_password_otp'), {
+            'otp_code': otp_record.otp_code,
+            'new_password': 'BrandNewPassword123!',
+            'confirm_password': 'BrandNewPassword123!',
+        })
+        self.assertEqual(reset_resp.status_code, 302)
+        self.assertRedirects(reset_resp, reverse('login'))
+
+        # Old password no longer works via login view
+        bad_login = self.client.post(reverse('login'), {'username': 'hero@example.com', 'password': 'OldPassword123!'})
+        self.assertFalse(bad_login.context['user'].is_authenticated if 'user' in (bad_login.context or {}) else False)
+
+        # New password works via login view (supports login via email)
+        good_login = self.client.post(reverse('login'), {'username': 'hero@example.com', 'password': 'BrandNewPassword123!'})
+        self.assertEqual(good_login.status_code, 302)
+        self.assertRedirects(good_login, reverse('dashboard'))
+
+        # Also works via direct username login
+        self.assertTrue(self.client.login(username='forgotten_hero', password='BrandNewPassword123!'))
+

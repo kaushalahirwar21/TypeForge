@@ -50,22 +50,26 @@ def signup_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            email = form.cleaned_data['email'].strip().lower()
-            name = form.cleaned_data.get('name', '').strip()
-            password = form.cleaned_data['password']
+            # Create user in pending / unverified state (is_active=False)
+            user = form.save(commit=True)
+            email = user.email
+            name = f"{user.first_name} {user.last_name}".strip() or user.username
 
-            # Send OTP email
+            # Dispatch OTP email using configured email account
             success, msg = create_and_send_otp(email, EmailOTP.PURPOSE_SIGNUP, user_name=name)
             if success:
-                request.session['pending_signup'] = {
-                    'email': email,
-                    'name': name,
-                    'password': password,
-                }
-                messages.success(request, f"A 6-digit verification code has been dispatched to {email}. Enter it below to activate your account.")
+                request.session['pending_signup_email'] = email
+                request.session['pending_signup_name'] = name
+                messages.success(request, f"A 6-digit verification code has been sent to {email}. Enter it below to activate your account.")
                 return redirect('verify_otp')
             else:
-                messages.error(request, f"Unable to dispatch verification email: {msg}. Please check your email configuration.")
+                if "cooldown" in msg.lower() or "wait" in msg.lower():
+                    messages.warning(request, msg)
+                    request.session['pending_signup_email'] = email
+                    request.session['pending_signup_name'] = name
+                    return redirect('verify_otp')
+                else:
+                    messages.error(request, "Unable to send the email right now. Please try again later.")
     else:
         form = SignUpForm()
     
@@ -76,13 +80,16 @@ def verify_otp_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
 
-    pending_signup = request.session.get('pending_signup')
-    if not pending_signup:
+    email = request.session.get('pending_signup_email')
+    if not email and 'pending_signup' in request.session:
+        email = request.session.get('pending_signup', {}).get('email')
+
+    if not email:
         messages.warning(request, "No pending registration found. Please fill out the sign up form first.")
         return redirect('signup')
 
-    email = pending_signup.get('email')
-    name = pending_signup.get('name', '')
+    user = User.objects.filter(email__iexact=email).first()
+    name = (f"{user.first_name} {user.last_name}".strip() if user else None) or request.session.get('pending_signup_name', '')
 
     if request.method == 'POST':
         otp_code = request.POST.get('otp_code', '').strip()
@@ -91,28 +98,13 @@ def verify_otp_view(request):
 
         is_valid, msg = verify_otp_code(email, otp_code, EmailOTP.PURPOSE_SIGNUP)
         if is_valid:
-            if User.objects.filter(email__iexact=email).exists():
-                messages.error(request, "An account with this email address already exists. Please log in.")
-                return redirect('login')
+            if not user:
+                messages.error(request, "Account not found. Please register again.")
+                return redirect('signup')
 
-            # Create User
-            parts = name.split(None, 1)
-            first_name = parts[0] if parts else ''
-            last_name = parts[1] if len(parts) > 1 else ''
-            base_username = email.split('@')[0].lower()
-            username = base_username
-            counter = 1
-            while User.objects.filter(username=username).exists():
-                username = f"{base_username}{counter}"
-                counter += 1
-
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=pending_signup['password'],
-                first_name=first_name,
-                last_name=last_name,
-            )
+            # Activate / verify account
+            user.is_active = True
+            user.save(update_fields=['is_active'])
 
             # Initialize Lesson 1 as unlocked
             first_lesson = Lesson.objects.order_by('level_number', 'lesson_number').first()
@@ -124,11 +116,14 @@ def verify_otp_view(request):
                 )
 
             # Clean session
-            if 'pending_signup' in request.session:
-                del request.session['pending_signup']
+            request.session.pop('pending_signup_email', None)
+            request.session.pop('pending_signup_name', None)
+            request.session.pop('pending_signup', None)
 
+            # Log in the newly activated user
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
-            messages.success(request, f"Welcome to TypeForge, {user.first_name or user.username}! Your email has been verified successfully.")
+            messages.success(request, f"Welcome to TypeRise, {user.first_name or user.username}! Your email has been verified successfully.")
             return redirect('dashboard')
         else:
             messages.error(request, msg)
@@ -143,12 +138,15 @@ def resend_otp_view(request):
     purpose = request.GET.get('purpose', 'signup')
     if purpose == 'forgot_password':
         email = request.session.get('reset_password_email')
-        name = "Typist"
+        user = User.objects.filter(email__iexact=email).first() if email else None
+        name = (user.first_name or user.username) if user else "Typist"
         redirect_url = 'reset_password_otp'
     else:
-        pending_signup = request.session.get('pending_signup')
-        email = pending_signup.get('email') if pending_signup else None
-        name = pending_signup.get('name', 'Typist') if pending_signup else 'Typist'
+        email = request.session.get('pending_signup_email')
+        if not email and 'pending_signup' in request.session:
+            email = request.session.get('pending_signup', {}).get('email')
+        user = User.objects.filter(email__iexact=email).first() if email else None
+        name = (user.first_name or user.username) if user else request.session.get('pending_signup_name', 'Typist')
         redirect_url = 'verify_otp'
 
     if not email:
@@ -159,7 +157,10 @@ def resend_otp_view(request):
     if success:
         messages.success(request, f"A fresh 6-digit verification code has been dispatched to {email}.")
     else:
-        messages.error(request, f"Could not resend code: {msg}")
+        if "cooldown" in msg.lower() or "wait" in msg.lower():
+            messages.warning(request, msg)
+        else:
+            messages.error(request, "Unable to send the email right now. Please try again later.")
 
     return redirect(redirect_url)
 
@@ -181,22 +182,27 @@ def login_view(request):
             next_url = request.GET.get('next') or 'dashboard'
             return redirect(next_url)
         else:
-            # Check if user entered email instead of username
-            entered_id = request.POST.get('username')
-            password = request.POST.get('password')
-            if entered_id and '@' in entered_id:
-                try:
-                    user_obj = User.objects.get(email__iexact=entered_id.strip())
-                    auth_user = authenticate(request, username=user_obj.username, password=password)
-                    if auth_user is not None:
-                        login(request, auth_user)
-                        profile, _ = UserProfile.objects.get_or_create(user=auth_user)
-                        profile.update_streak()
-                        profile.save()
-                        messages.success(request, f"Welcome back, {auth_user.first_name or auth_user.username}!")
-                        return redirect('dashboard')
-                except User.DoesNotExist:
-                    pass
+            # Check if user entered email or username with pending verification
+            entered_id = request.POST.get('username', '').strip()
+            password = request.POST.get('password', '')
+            user_obj = (
+                User.objects.filter(email__iexact=entered_id).first() or
+                User.objects.filter(username__iexact=entered_id).first()
+            )
+            if user_obj and user_obj.check_password(password):
+                if not user_obj.is_active:
+                    request.session['pending_signup_email'] = user_obj.email
+                    messages.warning(request, "Your account is pending verification. Please verify your email using the OTP.")
+                    return redirect('verify_otp')
+                else:
+                    user_obj.backend = 'django.contrib.auth.backends.ModelBackend'
+                    login(request, user_obj)
+                    profile, _ = UserProfile.objects.get_or_create(user=user_obj)
+                    profile.update_streak()
+                    profile.save()
+                    messages.success(request, f"Welcome back, {user_obj.first_name or user_obj.username}!")
+                    next_url = request.GET.get('next') or 'dashboard'
+                    return redirect(next_url)
             messages.error(request, "Invalid username or password. Please check and try again.")
     else:
         form = CustomLoginForm()
@@ -220,7 +226,7 @@ def forgot_password_view(request):
             messages.error(request, "Please enter your registered email address.")
             return render(request, 'auth/forgot_password.html')
 
-        user = User.objects.filter(email__iexact=email).first()
+        user = User.objects.filter(email__iexact=email, is_active=True).first()
         if user:
             success, msg = create_and_send_otp(
                 email=user.email,
@@ -232,9 +238,18 @@ def forgot_password_view(request):
                 messages.success(request, f"A 6-digit password reset code has been sent to {user.email}.")
                 return redirect('reset_password_otp')
             else:
-                messages.error(request, f"Failed to send reset email: {msg}. Please try again later.")
+                if "cooldown" in msg.lower() or "wait" in msg.lower():
+                    messages.warning(request, msg)
+                    request.session['reset_password_email'] = user.email
+                    return redirect('reset_password_otp')
+                else:
+                    messages.error(request, "Unable to send the email right now. Please try again later.")
         else:
-            messages.error(request, "No registered account found with that email address.")
+            inactive_user = User.objects.filter(email__iexact=email, is_active=False).first()
+            if inactive_user:
+                messages.error(request, "This account is not activated yet. Please complete email verification first.")
+            else:
+                messages.error(request, "No registered account found with that email address.")
 
     return render(request, 'auth/forgot_password.html')
 
@@ -266,9 +281,9 @@ def reset_password_otp_view(request):
             user = User.objects.filter(email__iexact=email).first()
             if user:
                 user.set_password(new_password)
+                user.is_active = True
                 user.save()
-                if 'reset_password_email' in request.session:
-                    del request.session['reset_password_email']
+                request.session.pop('reset_password_email', None)
                 messages.success(request, "Your password has been reset successfully! You can now log in with your new password.")
                 return redirect('login')
             else:

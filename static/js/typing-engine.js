@@ -1,6 +1,6 @@
 /**
- * TypeForge Real-Time Typing Engine
- * High-performance, zero-latency keystroke processor and metrics calculator.
+ * TypeRise Real-Time Typing Engine
+ * Zero-latency character matching, live WPM, Net WPM, and error tracking.
  */
 
 class TypingEngine {

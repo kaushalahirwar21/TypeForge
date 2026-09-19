@@ -1,5 +1,5 @@
 /**
- * TypeForge SVG Performance Charts Renderer
+ * TypeRise SVG Performance Charts Renderer
  * Ultra-lightweight, zero-dependency data visualizer for WPM & Accuracy trends.
  */
 

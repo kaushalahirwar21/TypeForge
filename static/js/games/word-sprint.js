@@ -1,5 +1,5 @@
 /**
- * TypeForge Game 2: Word Sprint
+ * TypeRise Game 2: Word Sprint
  * 60-Second rapid fire typing sprint. Type as many words as possible!
  */
 

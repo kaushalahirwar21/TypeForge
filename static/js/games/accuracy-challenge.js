@@ -1,5 +1,5 @@
 /**
- * TypeForge Game 3: Accuracy Challenge
+ * TypeRise Game 3: Accuracy Challenge
  * Maintain 100% precision through a challenging passage. 3 strikes and out!
  */
 

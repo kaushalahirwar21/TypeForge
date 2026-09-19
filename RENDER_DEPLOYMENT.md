@@ -1,6 +1,6 @@
-# 🚀 TypeForge — Render Production Deployment Guide
+# 🚀 TypeRise — Render Production Deployment Guide
 
-This guide walks you through deploying the **TypeForge** touch-typing learning platform to **Render** with a production-ready **PostgreSQL** database, **Gunicorn** WSGI application server, and **WhiteNoise** static asset handling with Brotli/Gzip compression.
+This guide walks you through deploying the **TypeRise** touch-typing learning platform to **Render** with a production-ready **PostgreSQL** database, **Gunicorn** WSGI application server, and **WhiteNoise** static asset handling with Brotli/Gzip compression.
 
 ---
 
@@ -45,7 +45,7 @@ This guide walks you through deploying the **TypeForge** touch-typing learning p
 
 ## ⚡ Method 1: Automated Blueprint Deployment (Recommended)
 
-TypeForge includes a `render.yaml` infrastructure-as-code Blueprint file in the root of the repository. This automatically provisions both the **Web Service** and the **PostgreSQL Database** in one click.
+TypeRise includes a `render.yaml` infrastructure-as-code Blueprint file in the root of the repository. This automatically provisions both the **Web Service** and the **PostgreSQL Database** in one click.
 
 ### Step 1: Push Changes to GitHub
 
@@ -197,7 +197,7 @@ https://<your-service-name>.onrender.com/
 1. **Free Tier Inactivity (Spin-down)**:
    - On the Render Free tier, web services spin down after 15 minutes of inactivity. The first request after spin-down may take ~30-50 seconds to boot up.
 2. **Ephemeral File System**:
-   - Render containers have an ephemeral file system. TypeForge currently stores all assets (keyboard maps, hand SVGs, sounds, styling) in version-controlled static files. If you add user file/image upload fields in the future, integrate **Amazon S3** or **Cloudinary** using `django-storages`.
+   - Render containers have an ephemeral file system. TypeRise currently stores all assets (keyboard maps, hand SVGs, sounds, styling) in version-controlled static files. If you add user file/image upload fields in the future, integrate **Amazon S3** or **Cloudinary** using `django-storages`.
 3. **Database Free Tier Lifetime**:
    - Render Free tier PostgreSQL databases expire after 30 days unless upgraded to a paid plan ($7/month). For permanent production data, upgrade the database or back up snapshots using `pg_dump`.
 

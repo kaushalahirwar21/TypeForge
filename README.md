@@ -1,8 +1,6 @@
-# ⌨️ TypeForge — Professional Touch Typing Learning Platform
+# ⌨️ TypeRise — Learn Typing Faster
 
-> **Master Touch Typing with Precision, Muscle Memory & Velocity**
-
-TypeForge is a complete, commercial-grade, full-stack touch typing platform inspired by the learning architecture of TypingClub. It is built from the ground up with 100% original branding, modern UI design, structured progressive curriculum, interactive SVG finger guidance, zero-latency typing engine, arcade typing games, gamification, and detailed analytics.
+> **TypeRise is an interactive typing-learning platform that helps you build typing accuracy, speed, and confidence through guided lessons and practice.**
 
 ---
 
@@ -16,6 +14,7 @@ TypeForge is a complete, commercial-grade, full-stack touch typing platform insp
 
 2. **Visual Virtual Keyboard & SVG Hand Guide**
    - Full QWERTY layout with color-coded finger mapping (Rose, Amber, Emerald, Royal Blue, Indigo, Cyan, Teal, Purple, Fuchsia).
+   - Fluid responsive keyboard auto-scaling across viewports (from 320px small mobile to 1920px+ large desktop).
    - Real-time active key and Shift-key illumination.
    - Dual-hand vector SVG diagram highlighting the exact finger to use for every stroke.
    - Dynamic prompt banner: *"Use your LEFT INDEX finger on F"*.
@@ -51,7 +50,7 @@ TypeForge is a complete, commercial-grade, full-stack touch typing platform insp
    - **Accuracy Challenge**: Precision gauntlet where typing errors consume protective shields (3 strikes and out).
 
 7. **Gamification & Habit Building**
-   - Leveling system (Level = 1 + XP // 200).
+   - Leveling system (`Level = 1 + XP // 200`).
    - Daily practice streak counter with milestones.
    - 17 unique achievement badges across 5 categories (Lessons, Speed, Accuracy, Streaks, Volume).
 
@@ -60,13 +59,18 @@ TypeForge is a complete, commercial-grade, full-stack touch typing platform insp
    - Visual error matrix highlighting problematic keys.
    - Generates personalized warm-up and precision drill recommendations.
 
-9. **Performance Analytics & Charts**
+9. **Performance Analytics & SVG Charts**
    - Native SVG line charts tracking speed trajectory and accuracy curves over time.
    - Lifetime keystrokes and practice time metrics.
 
-10. **Full User Authentication & Settings**
-    - Secure registration, login (username or email), password reset, and profile management.
-    - Custom user settings: toggle sound effects, toggle virtual keyboard, toggle hand guide, select font size, and choose themes.
+10. **Full User Authentication & 6-Digit Email OTP**
+    - Secure registration and password reset with 6-digit email OTP verification.
+    - Multi-tier email delivery: Brevo REST API, Resend REST API, and standard SMTP.
+    - Built-in HTTPS REST email support (Port 443) that bypasses cloud platform (e.g. Render Free Tier) SMTP port 587 blocking.
+    - Custom user settings: toggle sound effects, virtual keyboard, hand guide, font sizes, and dark/light themes.
+
+11. **Developer Profile**
+    - Built-in Developer Profile showcasing creator Kaushal Singh Ahirwar with LinkedIn and Portfolio links.
 
 ---
 
@@ -74,9 +78,10 @@ TypeForge is a complete, commercial-grade, full-stack touch typing platform insp
 
 - **Backend**: Python 3.11, Django 5.2, Django REST Framework
 - **Database**: SQLite (default zero-config local), PostgreSQL compatible via `dj-database-url`
-- **Frontend**: Semantic HTML5, Vanilla CSS3 (custom TypeForge design system, dark/light themes), Vanilla ES6+ JavaScript
+- **Frontend**: Semantic HTML5, Vanilla CSS3 (custom TypeRise design system, dark/light themes), Vanilla ES6+ JavaScript
 - **Audio**: Native Web Audio API synthesizer
-- **Static Files**: WhiteNoise
+- **Static Files**: WhiteNoise with Brotli & Gzip compression
+- **Email Delivery**: HTTPS REST API (Brevo & Resend) with SMTP/Console fallback
 
 ---
 
@@ -86,19 +91,22 @@ TypeForge is a complete, commercial-grade, full-stack touch typing platform insp
 typing/
 ├── manage.py                     # Django CLI
 ├── requirements.txt              # Dependencies
+├── render.yaml                   # Infrastructure-as-code Blueprint
+├── build.sh                      # Production build & asset pipeline
 ├── .env.example                  # Environment configuration template
-├── typeforge/                    # Django project configuration
+├── typeforge/                    # Django project core configuration module
 │   ├── settings.py               # Core settings (SQLite/Postgres, Whitenoise, DRF)
 │   ├── urls.py                   # Master URL routing
 │   ├── wsgi.py & asgi.py
-├── core/                         # Main TypeForge application
-│   ├── models.py                 # Course, Lesson, LessonProgress, TypingSession, etc.
+├── core/                         # Main TypeRise application
+│   ├── models.py                 # Course, Lesson, LessonProgress, TypingSession, EmailOTP, etc.
+│   ├── email_service.py          # Multi-tier HTTPS REST email dispatcher (Brevo/Resend/SMTP)
 │   ├── views.py                  # Page view controllers & REST API endpoints
 │   ├── urls.py                   # App routes
 │   ├── forms.py                  # Registration, login, profile & settings forms
 │   ├── admin.py                  # Comprehensive Django Admin integration
-│   ├── context_processors.py     # Universal branding & profile context
-│   ├── tests.py                  # Automated test suite (8 tests)
+│   ├── context_processors.py     # Universal TypeRise branding & profile context
+│   ├── tests.py                  # Comprehensive automated test suite (15 tests)
 │   └── management/commands/
 │       ├── seed_curriculum.py    # Populates all 13 levels, 54 lessons, and achievements
 │       └── create_demo_user.py   # Seeds demo account with rich telemetry
@@ -121,11 +129,12 @@ typing/
 │   │       ├── word-sprint.js
 │   │       └── accuracy-challenge.js
 │   └── img/
-│       └── logo.svg              # TypeForge brand logo
+│       ├── logo.svg              # TypeRise brand logo
+│       └── developer.png         # Developer profile photo
 └── templates/
     ├── base.html                 # Main master layout
-    ├── pages/                    # Landing, About, Help & FAQ
-    ├── auth/                     # Signup, Login, Password Reset
+    ├── pages/                    # Landing, About, Developer, Help & FAQ
+    ├── auth/                     # Signup, Login, Verify OTP, Reset Password OTP
     └── app/                      # Dashboard, Lessons, Typing Test, Games, etc.
 ```
 
@@ -162,35 +171,29 @@ Open **[http://127.0.0.1:8000](http://127.0.0.1:8000)** in your browser!
 
 | Role | Username | Password | Email |
 | :--- | :--- | :--- | :--- |
-| **Demo User** | `demo` | `Password123!` | `demo@typeforge.local` |
+| **Demo User** | `demo` | `Password123!` | `demo@typerise.local` |
 | **Admin Panel** | `demo` (superuser) | `Password123!` | Access at `/admin/` |
 
 ---
 
 ## 🧪 Running Automated Tests
 
-TypeForge includes a comprehensive test suite covering models, authentication, star calculations, lesson unlocking, and typing test logging:
+TypeRise includes a comprehensive test suite covering models, authentication, OTP dispatch, Brevo/Resend fallback, star calculations, lesson unlocking, and typing test logging:
 
 ```bash
 python manage.py test core
 ```
-*Expected Output: `Ran 8 tests ... OK`*
+*Expected Output: `Ran 15 tests ... OK`*
 
 ---
 
-## 🌐 Production Deployment Guide
+## 🌐 Production Deployment (Render)
 
-1. Set `DEBUG=False` in your `.env` file.
-2. Set a secure `SECRET_KEY` and specify `ALLOWED_HOSTS`.
-3. Provide PostgreSQL database connection string via `DATABASE_URL`:
-   ```env
-   DATABASE_URL=postgres://user:password@host:5432/typeforge_db
-   ```
-4. Collect static assets:
-   ```bash
-   python manage.py collectstatic --noinput
-   ```
-5. Run using an ASGI/WSGI production server such as Gunicorn:
-   ```bash
-   gunicorn typeforge.wsgi:application --bind 0.0.0.0:8000
-   ```
+1. Connect your repository to Render.
+2. The included `render.yaml` Blueprint automatically creates:
+   - Web Service (`gunicorn typeforge.wsgi:application`)
+   - Managed PostgreSQL Database
+3. For live email delivery on Render Free Tier, add your free Brevo API key:
+   - `BREVO_API_KEY`: `xkeysib-...` (from [brevo.com](https://www.brevo.com))
+   - `BREVO_SENDER_EMAIL`: `your-email@gmail.com`
+4. The deployment runs `build.sh` automatically to install requirements, run migrations, collect static files, and seed curriculum.

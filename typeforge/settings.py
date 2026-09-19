@@ -58,8 +58,8 @@ if RENDER_EXTERNAL_HOSTNAME:
     if render_origin not in CSRF_TRUSTED_ORIGINS:
         CSRF_TRUSTED_ORIGINS.append(render_origin)
 
-# Support custom domain typeforge.ai
-for custom_domain in ['typeforge.ai', 'www.typeforge.ai']:
+# Support custom domain typerise.ai & legacy typeforge.ai
+for custom_domain in ['typerise.ai', 'www.typerise.ai', 'typeforge.ai', 'www.typeforge.ai']:
     if custom_domain not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(custom_domain)
     custom_origin = f"https://{custom_domain}"
@@ -216,32 +216,40 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Email Configuration (SMTP with console fallback for development without credentials)
+# Email Configuration (Uses configured environment variables)
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '').strip()
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').strip()
 
 if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 else:
-    # Development fallback: prints email contents to terminal/logs without failing
+    # Development fallback: prints email contents to terminal/logs when no credentials configured
     EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
 
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com').strip()
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
-EMAIL_TIMEOUT = 10
 
-email_sender_name = os.environ.get('EMAIL_FROM_NAME', 'TypeForge')
-if EMAIL_HOST_USER:
+# Determine TLS vs SSL automatically from port if not explicitly set
+_port_ssl = (EMAIL_PORT == 465)
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'True' if _port_ssl else 'False').lower() in ('true', '1', 'yes')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False' if _port_ssl else 'True').lower() in ('true', '1', 'yes')
+EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', '10'))
+
+email_sender_name = os.environ.get('EMAIL_FROM_NAME', 'TypeRise').strip()
+default_from_env = os.environ.get('DEFAULT_FROM_EMAIL', '').strip()
+if default_from_env:
+    DEFAULT_FROM_EMAIL = default_from_env
+elif EMAIL_HOST_USER:
     DEFAULT_FROM_EMAIL = f"{email_sender_name} <{EMAIL_HOST_USER}>"
 else:
-    DEFAULT_FROM_EMAIL = f"{email_sender_name} <noreply@typeforge.com>"
+    DEFAULT_FROM_EMAIL = f"{email_sender_name} <noreply@typerise.com>"
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Developer Profile Details & External URLs
 DEVELOPER_NAME = 'Kaushal Singh Ahirwar'
 DEVELOPER_ROLE = 'Full-stack Developer'
-DEVELOPER_TYPEFORGE_ROLE = 'TypeForge — Creator & Developer'
+DEVELOPER_TYPERISE_ROLE = 'TypeRise — Creator & Developer'
+DEVELOPER_TYPEFORGE_ROLE = DEVELOPER_TYPERISE_ROLE  # Backwards compatibility
 DEVELOPER_LINKEDIN_URL = os.environ.get('DEVELOPER_LINKEDIN_URL', 'https://www.linkedin.com/in/kaushal-singh-ahirwar')
 DEVELOPER_PORTFOLIO_URL = os.environ.get('DEVELOPER_PORTFOLIO_URL', 'https://kaushal-port.netlify.app/')
 

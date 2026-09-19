@@ -309,6 +309,7 @@ class EmailOTP(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
     is_used = models.BooleanField(default=False)
+    failed_attempts = models.PositiveIntegerField(default=0)
 
     class Meta:
         verbose_name = 'Email OTP'
@@ -316,8 +317,8 @@ class EmailOTP(models.Model):
         ordering = ['-created_at']
 
     def is_valid(self):
-        return not self.is_used and timezone.now() <= self.expires_at
+        return not self.is_used and timezone.now() <= self.expires_at and self.failed_attempts < 5
 
     def __str__(self):
-        return f"{self.email} - {self.otp_code} ({self.purpose})"
+        return f"{self.email} ({self.purpose}) - Used: {self.is_used}"
 

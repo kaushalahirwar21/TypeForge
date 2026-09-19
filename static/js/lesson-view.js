@@ -1,5 +1,5 @@
 /**
- * TypeForge Lesson View Controller
+ * TypeRise Lesson View Controller
  * Integrates TypingEngine, VirtualKeyboard, Sound, HUD, and Completion Modal
  */
 
@@ -66,7 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalBtnDrill = document.getElementById('modal-btn-drill');
 
   // Initialize Virtual Keyboard & Finger Guide
-  const keyboard = new TypeForgeKeyboard('virtual-keyboard', 'hand-guide');
+  const KeyboardClass = window.TypeRiseKeyboard || window.TypeForgeKeyboard;
+  const keyboard = new KeyboardClass('virtual-keyboard', 'hand-guide');
 
   // Render Target Text Spans
   function renderText() {

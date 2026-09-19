@@ -43,8 +43,8 @@ class SignUpForm(forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').strip().lower()
-        if User.objects.filter(email__iexact=email).exists():
-            raise ValidationError("An account with this email address already exists.")
+        if User.objects.filter(email__iexact=email, is_active=True).exists():
+            raise ValidationError("An account with this email address already exists. Please log in.")
         return email
 
     def clean(self):
@@ -59,19 +59,27 @@ class SignUpForm(forms.ModelForm):
         return cleaned_data
 
     def save(self, commit=True):
-        user = super().save(commit=False)
+        email = self.cleaned_data.get('email', '').strip().lower()
+        # If an unverified/inactive account already exists with this email, reuse it
+        existing_inactive = User.objects.filter(email__iexact=email, is_active=False).first()
+        if existing_inactive:
+            user = existing_inactive
+        else:
+            user = super().save(commit=False)
+            base_username = email.split('@')[0].lower()
+            username = base_username
+            counter = 1
+            while User.objects.filter(username=username).exclude(pk=user.pk if user.pk else None).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            user.username = username
+
         name = self.cleaned_data.get('name', '').strip()
         parts = name.split(None, 1)
         user.first_name = parts[0] if parts else ''
         user.last_name = parts[1] if len(parts) > 1 else ''
-        # Generate username from email
-        base_username = self.cleaned_data.get('email').split('@')[0].lower()
-        username = base_username
-        counter = 1
-        while User.objects.filter(username=username).exists():
-            username = f"{base_username}{counter}"
-            counter += 1
-        user.username = username
+        user.email = email
+        user.is_active = False
         user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()

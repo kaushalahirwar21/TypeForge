@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         username = 'demo'
-        email = 'demo@typeforge.local'
+        email = 'demo@typerise.local'
         password = 'Password123!'
 
         user, created = User.objects.get_or_create(

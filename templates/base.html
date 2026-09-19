@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}TypeForge — Master Touch Typing{% endblock %}</title>
-  <meta name="description" content="{% block meta_description %}TypeForge is a modern, interactive touch-typing platform to build professional typing speed, accuracy, and muscle memory.{% endblock %}">
+  <title>{% block title %}TypeRise – Learn Typing Faster{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}TypeRise is an interactive typing-learning platform that helps you build typing accuracy, speed, and confidence through guided lessons and practice.{% endblock %}">
   
   <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
@@ -17,8 +17,8 @@
   <header class="site-header">
     <div class="container nav-container">
       <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'landing' %}{% endif %}" class="brand-link">
-        <img src="{% static 'img/logo.svg' %}" alt="TypeForge Logo" width="34" height="34" style="vertical-align: middle;">
-        <span>TypeForge</span>
+        <img src="{% static 'img/logo.svg' %}" alt="TypeRise Logo" width="34" height="34" style="vertical-align: middle;">
+        <span>TypeRise</span>
       </a>
 
       <!-- Desktop Navigation Links -->
@@ -76,8 +76,8 @@
   <aside class="mobile-drawer" id="mobile-drawer" aria-label="Mobile Navigation" aria-hidden="true">
     <div class="mobile-drawer-header">
       <div class="brand-link">
-        <img src="{% static 'img/logo.svg' %}" alt="TypeForge Logo" width="28" height="28">
-        <span>TypeForge</span>
+        <img src="{% static 'img/logo.svg' %}" alt="TypeRise Logo" width="28" height="28">
+        <span>TypeRise</span>
       </div>
       <button class="mobile-drawer-close" id="mobile-drawer-close" aria-label="Close Navigation Menu">&times;</button>
     </div>
@@ -156,8 +156,8 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-            <img src="{% static 'img/logo.svg' %}" alt="TypeForge" width="28" height="28">
-            <h3 style="margin: 0; color: #ffffff;">TypeForge</h3>
+            <img src="{% static 'img/logo.svg' %}" alt="TypeRise" width="28" height="28">
+            <h3 style="margin: 0; color: #ffffff;">TypeRise</h3>
           </div>
           <p>An educational touch-typing learning platform designed to take beginners from basic home row orientation to lightning-fast, highly accurate 100+ WPM typing.</p>
         </div>
@@ -198,7 +198,7 @@
       </div>
 
       <div class="footer-bottom">
-        <span>&copy; {% now "Y" %} TypeForge. All rights reserved.</span>
+        <span>&copy; {% now "Y" %} TypeRise. All rights reserved.</span>
       </div>
     </div>
   </footer>

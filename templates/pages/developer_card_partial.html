@@ -3,7 +3,7 @@
   <div class="dev-photo-wrapper">
     <img 
       src="{% static 'img/developer.png' %}" 
-      alt="Kaushal Singh Ahirwar — Full-stack Developer and Creator of TypeForge" 
+      alt="Kaushal Singh Ahirwar — Full-stack Developer and Creator of TypeRise" 
       class="dev-photo"
       width="140"
       height="140"
@@ -13,7 +13,7 @@
   <div class="dev-info">
     <h3 class="dev-name">{{ DEVELOPER_NAME|default:"Kaushal Singh Ahirwar" }}</h3>
     <div class="dev-role">{{ DEVELOPER_ROLE|default:"Full-stack Developer" }}</div>
-    <div class="dev-typeforge-role">{{ DEVELOPER_TYPEFORGE_ROLE|default:"TypeForge — Creator & Developer" }}</div>
+    <div class="dev-typeforge-role dev-typerise-role">{{ DEVELOPER_TYPERISE_ROLE|default:DEVELOPER_TYPEFORGE_ROLE|default:"TypeRise — Creator & Developer" }}</div>
     <div class="dev-links">
       <a 
         href="{{ DEVELOPER_LINKEDIN_URL|default:'https://www.linkedin.com/in/kaushal-singh-ahirwar' }}" 

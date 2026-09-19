@@ -1,20 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
   <defs>
-    <linearGradient id="tf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3b82f6" />
-      <stop offset="100%" stop-color="#06b6d4" />
+    <linearGradient id="tr-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#0284c7" />
     </linearGradient>
-    <linearGradient id="spark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f59e0b" />
-      <stop offset="100%" stop-color="#ef4444" />
+    <linearGradient id="tr-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#06b6d4" />
     </linearGradient>
   </defs>
   <!-- Base Keyboard Keycap -->
-  <rect x="4" y="6" width="40" height="36" rx="8" fill="url(#tf-grad)" />
-  <rect x="7" y="9" width="34" height="30" rx="6" fill="#111827" fill-opacity="0.85" />
+  <rect x="4" y="6" width="40" height="36" rx="8" fill="url(#tr-grad)" />
+  <rect x="7" y="9" width="34" height="30" rx="6" fill="#0f172a" fill-opacity="0.9" />
   
-  <!-- Stylized T & Anvil / Forge Shape -->
-  <path d="M16 16 H32 V21 H26.5 V33 H21.5 V21 H16 Z" fill="#ffffff" />
-  <!-- Spark Element -->
-  <circle cx="34" cy="14" r="3" fill="url(#spark-grad)" />
+  <!-- Stylized T (TypeRise) -->
+  <path d="M15 17 H31 V22 H25.5 V33 H20.5 V22 H15 Z" fill="#ffffff" />
+  
+  <!-- Rising Upward Arrow Accent (TypeRise Momentum) -->
+  <path d="M30 13 L36 13 L36 19" stroke="url(#tr-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M36 13 L28 21" stroke="url(#tr-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
 </svg>

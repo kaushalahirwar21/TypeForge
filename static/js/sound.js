@@ -1,15 +1,15 @@
 /**
- * TypeForge Web Audio API Sound Synthesizer
+ * TypeRise Web Audio API Sound Synthesizer
  * Produces crisp mechanical keyclicks, error thuds, and victory chimes
  * Zero external audio files or network requests required.
  */
-class TypeForgeAudio {
+class TypeRiseAudio {
   constructor() {
     this.audioCtx = null;
     this.enabled = true;
 
     // Read stored setting if present
-    const stored = localStorage.getItem('typeforge_sound');
+    const stored = localStorage.getItem('typerise_sound') || localStorage.getItem('typeforge_sound');
     if (stored !== null) {
       this.enabled = stored === 'true';
     }
@@ -33,6 +33,7 @@ class TypeForgeAudio {
     } else {
       this.enabled = !this.enabled;
     }
+    localStorage.setItem('typerise_sound', this.enabled);
     localStorage.setItem('typeforge_sound', this.enabled);
     return this.enabled;
   }
@@ -126,4 +127,8 @@ class TypeForgeAudio {
 }
 
 // Global Sound Instance
-window.typeforgeSound = new TypeForgeAudio();
+const typeriseAudioInstance = new TypeRiseAudio();
+window.TypeRiseAudio = TypeRiseAudio;
+window.TypeForgeAudio = TypeRiseAudio; // Backwards compatibility
+window.typeriseSound = typeriseAudioInstance;
+window.typeforgeSound = typeriseAudioInstance; // Backwards compatibility

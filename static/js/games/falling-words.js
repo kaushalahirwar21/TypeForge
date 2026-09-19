@@ -1,5 +1,5 @@
 /**
- * TypeForge Game 1: Falling Words
+ * TypeRise Game 1: Falling Words
  * Words fall towards a danger zone. Type them before they hit the ground!
  */
 

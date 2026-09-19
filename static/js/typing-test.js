@@ -1,5 +1,5 @@
 /**
- * TypeForge Timed Typing Test Controller
+ * TypeRise Timed Typing Test Controller
  * 30s, 60s, and 120s test modes with realistic prose paragraphs.
  */
 

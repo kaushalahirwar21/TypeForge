@@ -2,13 +2,14 @@ from django.conf import settings
 from .models import UserProfile, UserSettings
 
 def site_settings(request):
-    """Context processor providing universal TypeForge context across all templates."""
+    """Context processor providing universal TypeRise context across all templates."""
     context = {
-        'SITE_NAME': 'TypeForge',
-        'SITE_TAGLINE': 'Master Touch Typing with Precision & Speed',
+        'SITE_NAME': 'TypeRise',
+        'SITE_TAGLINE': 'Learn Typing Faster',
         'DEVELOPER_NAME': getattr(settings, 'DEVELOPER_NAME', 'Kaushal Singh Ahirwar'),
         'DEVELOPER_ROLE': getattr(settings, 'DEVELOPER_ROLE', 'Full-stack Developer'),
-        'DEVELOPER_TYPEFORGE_ROLE': getattr(settings, 'DEVELOPER_TYPEFORGE_ROLE', 'TypeForge — Creator & Developer'),
+        'DEVELOPER_TYPERISE_ROLE': getattr(settings, 'DEVELOPER_TYPERISE_ROLE', 'TypeRise — Creator & Developer'),
+        'DEVELOPER_TYPEFORGE_ROLE': getattr(settings, 'DEVELOPER_TYPERISE_ROLE', 'TypeRise — Creator & Developer'),
         'DEVELOPER_LINKEDIN_URL': getattr(settings, 'DEVELOPER_LINKEDIN_URL', 'https://www.linkedin.com/in/kaushal-singh-ahirwar'),
         'DEVELOPER_PORTFOLIO_URL': getattr(settings, 'DEVELOPER_PORTFOLIO_URL', 'https://kaushal-port.netlify.app/'),
     }
