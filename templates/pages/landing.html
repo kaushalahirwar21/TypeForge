@@ -193,6 +193,29 @@
   </div>
 </section>
 
+<!-- About TypeRise & Creator Section -->
+<section class="about-section" style="padding: 5rem 0; background: rgba(15, 23, 42, 0.4); border-top: 1px solid rgba(148, 163, 184, 0.08); border-bottom: 1px solid rgba(148, 163, 184, 0.08);">
+  <div class="container">
+    <div class="section-header" style="text-align: center; margin-bottom: 3rem;">
+      <span class="section-tag">About The Platform</span>
+      <h2 class="section-title">Built with Passion for Touch Typing Fluency</h2>
+      <p class="section-desc" style="max-width: 680px; margin: 0.75rem auto 1.5rem;">
+        TypeRise was developed to provide an ad-free, structured, and modern touch-typing learning platform. From muscle memory fundamentals to high-speed dexterity, our mission is to make typing effortless for everyone.
+      </p>
+      <div>
+        <a href="{% url 'about' %}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+          <span>Read Full Methodology &amp; Mission</span> &rarr;
+        </a>
+      </div>
+    </div>
+
+    <!-- Meet the Developer Card -->
+    <div style="max-width: 800px; margin: 0 auto;">
+      {% include 'pages/developer_card_partial.html' %}
+    </div>
+  </div>
+</section>
+
 <!-- Call to Action Banner -->
 <section class="cta-section">
   <div class="container">

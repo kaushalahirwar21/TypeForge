@@ -31,6 +31,7 @@
             <li class="nav-item"><a href="{% url 'games' %}" class="{% if request.resolver_match.url_name == 'games' %}active{% endif %}">Games</a></li>
             <li class="nav-item"><a href="{% url 'achievements' %}" class="{% if request.resolver_match.url_name == 'achievements' %}active{% endif %}">Achievements</a></li>
             <li class="nav-item"><a href="{% url 'statistics' %}" class="{% if request.resolver_match.url_name == 'statistics' %}active{% endif %}">Statistics</a></li>
+            <li class="nav-item"><a href="{% url 'about' %}" class="{% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a></li>
           {% else %}
             <li class="nav-item"><a href="{% url 'course_map' %}" class="{% if request.resolver_match.url_name == 'course_map' %}active{% endif %}">Lessons</a></li>
             <li class="nav-item"><a href="{% url 'typing_test' %}" class="{% if request.resolver_match.url_name == 'typing_test' %}active{% endif %}">Typing Test</a></li>
@@ -118,6 +119,8 @@
         <li><a href="{% url 'statistics' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'statistics' %}active{% endif %}"><span>📈</span> Statistics</a></li>
         <li><a href="{% url 'profile' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><span>👤</span> My Profile</a></li>
         <li><a href="{% url 'settings' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}"><span>⚙️</span> Preferences</a></li>
+        <li><a href="{% url 'about' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"><span>📖</span> About TypeRise</a></li>
+        <li><a href="{% url 'help' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}"><span>❓</span> Help &amp; FAQ</a></li>
         <li style="margin-top: 0.75rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
           <a href="{% url 'logout' %}" class="mobile-nav-link" style="color: var(--danger);"><span>🚪</span> Log Out</a>
         </li>
