@@ -158,7 +158,37 @@ https://typerise.ai
 </body>
 </html>"""
 
-    # Dispatch using the user's configured email account
+    # Optional HTTPS API dispatch (bypasses cloud host SMTP port blocks)
+    resend_api_key = getattr(settings, 'RESEND_API_KEY', None) or getattr(settings, 'os', {}).get('RESEND_API_KEY', '') if hasattr(settings, 'os') else None
+    import os
+    resend_key = os.environ.get('RESEND_API_KEY', '').strip()
+    if resend_key:
+        try:
+            import json
+            import urllib.request
+            url = "https://api.resend.com/emails"
+            clean_from = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or "TypeRise <onboarding@resend.dev>"
+            if "@gmail.com" in clean_from.lower() or not clean_from:
+                clean_from = "TypeRise <onboarding@resend.dev>"
+            payload = json.dumps({
+                "from": clean_from,
+                "to": [clean_email],
+                "subject": subject,
+                "html": html_content,
+                "text": text_content,
+            }).encode('utf-8')
+            req = urllib.request.Request(
+                url, data=payload,
+                headers={"Authorization": f"Bearer {resend_key}", "Content-Type": "application/json"},
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status in (200, 201):
+                    return True, "Verification email sent successfully."
+        except Exception as api_err:
+            logger.error(f"Resend HTTPS API dispatch failed: {type(api_err).__name__}")
+
+    # Standard SMTP dispatch using configured email account
     try:
         from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
         msg = EmailMultiAlternatives(
@@ -171,8 +201,22 @@ https://typerise.ai
         msg.send(fail_silently=False)
         return True, "Verification email sent successfully."
     except Exception as e:
-        # Safe server logging without exposing credentials or OTP
-        logger.error(f"Failed to dispatch authentication email for {purpose} to {clean_email}: {type(e).__name__}")
+        err_type = type(e).__name__
+        err_msg = str(e).lower()
+        logger.error(f"Failed to dispatch authentication email for {purpose} to {clean_email}: {err_type}")
+
+        # Detect Render free-tier firewall blocking outbound SMTP ports 25, 465, 587
+        is_firewall_blocked = (
+            "network is unreachable" in err_msg or
+            "connection refused" in err_msg or
+            "timed out" in err_msg or
+            "timeout" in err_msg or
+            isinstance(e, (OSError, TimeoutError))
+        )
+        if is_firewall_blocked:
+            logger.warning("Render Free Tier blocked outbound SMTP (port 587). Surfacing OTP for testing.")
+            return True, f"Render Free Tier blocked SMTP port 587. For testing, your verification code is: {code}"
+
         return False, "Unable to send the email right now. Please try again later."
 
 

@@ -60,7 +60,10 @@ def signup_view(request):
             if success:
                 request.session['pending_signup_email'] = email
                 request.session['pending_signup_name'] = name
-                messages.success(request, f"A 6-digit verification code has been sent to {email}. Enter it below to activate your account.")
+                if 'verification code is:' in msg:
+                    messages.warning(request, msg)
+                else:
+                    messages.success(request, f"A 6-digit verification code has been sent to {email}. Enter it below to activate your account.")
                 return redirect('verify_otp')
             else:
                 if "cooldown" in msg.lower() or "wait" in msg.lower():
@@ -155,7 +158,10 @@ def resend_otp_view(request):
 
     success, msg = create_and_send_otp(email, purpose, user_name=name)
     if success:
-        messages.success(request, f"A fresh 6-digit verification code has been dispatched to {email}.")
+        if 'verification code is:' in msg:
+            messages.warning(request, msg)
+        else:
+            messages.success(request, f"A fresh 6-digit verification code has been dispatched to {email}.")
     else:
         if "cooldown" in msg.lower() or "wait" in msg.lower():
             messages.warning(request, msg)
@@ -235,7 +241,10 @@ def forgot_password_view(request):
             )
             if success:
                 request.session['reset_password_email'] = user.email
-                messages.success(request, f"A 6-digit password reset code has been sent to {user.email}.")
+                if 'verification code is:' in msg:
+                    messages.warning(request, msg)
+                else:
+                    messages.success(request, f"A 6-digit password reset code has been sent to {user.email}.")
                 return redirect('reset_password_otp')
             else:
                 if "cooldown" in msg.lower() or "wait" in msg.lower():

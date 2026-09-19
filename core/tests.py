@@ -457,12 +457,30 @@ class TypeRiseViewAndAPITests(TestCase):
             'password_confirm': 'SecurePassword123!',
         }
 
-        # Mock email dispatch raising an unexpected connection error
-        with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=Exception("SMTP Connection timed out")):
+        # Mock unexpected mailer error
+        with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=ValueError("Unexpected mailer error")):
             response = self.client.post(reverse('signup'), data=signup_data, follow=True)
             self.assertEqual(response.status_code, 200)
             messages_list = list(response.context['messages'])
             self.assertTrue(any("Unable to send the email right now. Please try again later." in str(m) for m in messages_list))
+
+    def test_render_firewall_blocks_smtp_surfaces_otp(self):
+        from unittest.mock import patch
+
+        signup_data = {
+            'name': 'Render Test',
+            'email': 'rendertest@example.com',
+            'password': 'SecurePassword123!',
+            'password_confirm': 'SecurePassword123!',
+        }
+
+        # Simulate Render free-tier firewall blocking outbound SMTP port 587
+        with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=OSError(101, 'Network is unreachable')):
+            response = self.client.post(reverse('signup'), data=signup_data, follow=True)
+            self.assertEqual(response.status_code, 200)
+            messages_list = list(response.context['messages'])
+            self.assertTrue(any("Render Free Tier blocked SMTP port 587" in str(m) for m in messages_list))
+            self.assertTrue(any("your verification code is:" in str(m) for m in messages_list))
 
     def test_forgot_password_and_reset_flow(self):
         from core.models import EmailOTP
