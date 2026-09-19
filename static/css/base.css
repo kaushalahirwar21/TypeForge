@@ -92,6 +92,7 @@ html {
   font-size: 16px;
   scroll-behavior: smooth;
   height: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -99,11 +100,41 @@ body {
   background-color: var(--bg-main);
   color: var(--text-main);
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fluid Responsive Typography */
+h1 {
+  font-size: clamp(1.6rem, 3.5vw + 0.5rem, 2.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: clamp(1.3rem, 2.5vw + 0.3rem, 2rem);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+h3 {
+  font-size: clamp(1.1rem, 1.8vw + 0.2rem, 1.45rem);
+  line-height: 1.3;
+}
+
+h4 {
+  font-size: clamp(0.95rem, 1.2vw + 0.1rem, 1.2rem);
+  line-height: 1.35;
+}
+
+img, svg, video {
+  max-width: 100%;
+  height: auto;
 }
 
 a {
@@ -138,8 +169,8 @@ a:hover {
   max-width: 1240px;
   margin-left: auto;
   margin-right: auto;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+  padding-left: clamp(0.85rem, 3vw, 1.5rem);
+  padding-right: clamp(0.85rem, 3vw, 1.5rem);
 }
 
 /* ==========================================================================
@@ -261,19 +292,153 @@ a:hover {
   background-color: var(--primary);
 }
 
-/* Mobile Toggle */
+/* Mobile Toggle & Actions */
+.mobile-nav-actions {
+  display: none;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 .mobile-nav-toggle {
   display: none;
-  background: none;
-  border: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   color: var(--text-main);
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   cursor: pointer;
-  padding: 0.5rem;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.mobile-nav-toggle:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 /* ==========================================================================
-   Buttons & UI Elements
+   Mobile Navigation Drawer & Backdrop
+   ========================================================================== */
+.mobile-drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(11, 15, 25, 0.85);
+  backdrop-filter: blur(6px);
+  z-index: 998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-smooth);
+}
+
+.mobile-drawer-backdrop.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(88vw, 360px);
+  background-color: var(--bg-surface);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  z-index: 999;
+  transform: translateX(100%);
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-drawer.open {
+  transform: translateX(0);
+}
+
+.mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.mobile-drawer-close {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.mobile-drawer-close:hover {
+  color: var(--text-main);
+  border-color: var(--danger);
+}
+
+.mobile-user-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.mobile-auth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.mobile-nav-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  font-weight: 600;
+  min-height: 44px;
+  transition: all var(--transition-fast);
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link.active {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: var(--primary);
+}
+
+/* ==========================================================================
+   Buttons & UI Elements (44px min tap targets)
    ========================================================================== */
 .btn {
   display: inline-flex;
@@ -283,12 +448,14 @@ a:hover {
   padding: 0.65rem 1.25rem;
   font-size: 0.95rem;
   font-weight: 600;
+  min-height: 44px;
   border-radius: var(--radius-md);
   border: 1px solid transparent;
   cursor: pointer;
   transition: all var(--transition-fast);
   text-decoration: none;
   line-height: 1.25;
+  touch-action: manipulation;
 }
 
 .btn-primary {
@@ -338,12 +505,14 @@ a:hover {
 .btn-lg {
   padding: 0.85rem 1.75rem;
   font-size: 1.05rem;
+  min-height: 48px;
   border-radius: var(--radius-lg);
 }
 
 .btn-sm {
-  padding: 0.4rem 0.85rem;
+  padding: 0.35rem 0.8rem;
   font-size: 0.85rem;
+  min-height: 38px;
 }
 
 /* Badges */
@@ -356,6 +525,7 @@ a:hover {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .badge-primary { background: var(--primary-glow); color: var(--primary); border: 1px solid var(--primary); }
@@ -443,7 +613,8 @@ a:hover {
 
 .form-input, .form-select {
   width: 100%;
-  padding: 0.75rem 1rem;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
   background-color: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -469,6 +640,15 @@ a:hover {
   font-size: 0.85rem;
   color: var(--danger);
   margin-top: 0.35rem;
+}
+
+/* Responsive Table Wrapper */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-md);
 }
 
 /* ==========================================================================
@@ -536,47 +716,62 @@ a:hover {
   justify-content: space-between;
   font-size: 0.85rem;
   color: var(--text-subtle);
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 /* ==========================================================================
-   Responsive Adaptations
+   Global Responsive Breakpoints
    ========================================================================== */
-@media (max-width: 900px) {
+/* Tablet & Medium Screens */
+@media (max-width: 1024px) {
   .nav-links {
-    display: none;
-    position: absolute;
-    top: 70px;
-    left: 0;
-    right: 0;
-    background-color: var(--bg-surface);
-    border-bottom: 1px solid var(--border);
-    flex-direction: column;
-    padding: 1.5rem;
-    gap: 0.75rem;
-    box-shadow: var(--shadow-lg);
+    gap: 0.85rem;
   }
-
-  .nav-links.show-mobile {
-    display: flex;
+  .nav-item a {
+    padding: 0.4rem 0.55rem;
+    font-size: 0.88rem;
   }
-
-  .mobile-nav-toggle {
-    display: block;
-  }
-
   .footer-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 1.75rem;
   }
 }
 
-@media (max-width: 600px) {
+/* Small Tablet & Mobile Portrait (< 768px) */
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none;
+  }
+  .desktop-auth {
+    display: none;
+  }
+  .mobile-nav-actions {
+    display: flex;
+  }
+  .mobile-nav-toggle {
+    display: flex;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  .site-footer {
+    padding: 2.5rem 0 1.5rem 0;
+  }
+}
+
+/* Mobile Devices (< 480px) */
+@media (max-width: 480px) {
   .footer-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
-
   .footer-bottom {
     flex-direction: column;
-    gap: 1rem;
     text-align: center;
+  }
+  .card {
+    padding: 1.15rem;
   }
 }

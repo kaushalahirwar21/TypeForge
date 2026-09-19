@@ -384,7 +384,7 @@
   </div>
 
   <!-- Navigation Prev/Next Shortcuts -->
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+  <div class="lesson-nav-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
     {% if prev_lesson %}
       <a href="{% url 'lesson_view' prev_lesson.lesson_number %}" class="btn btn-secondary btn-sm">
         ← Previous (Lesson {{ prev_lesson.lesson_number }})
