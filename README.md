@@ -7,6 +7,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-18%20Passed-brightgreen.svg)]()
 
+<p align="center">
+  <img src="static/img/preview.png" alt="TypeRise Platform Preview" width="100%">
+</p>
+
 ---
 
 ## 🚀 Key Highlights & Features
@@ -137,6 +141,7 @@ TypeRise/
 │   │       └── accuracy-challenge.js
 │   └── img/
 │       ├── logo.svg              # TypeRise brand logo
+│       ├── preview.png           # Platform landing preview screenshot
 │       └── developer.png         # Developer profile photo
 └── templates/
     ├── base.html                 # Master layout
